@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MemoryWall · Marchés</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="static/chart.umd.min.js"></script>
+  <script src="static/chartjs-plugin-annotation.min.js"></script>
+  <style>
+    :root {
+      --ink:#1a1714; --ink-soft:#4a453f; --ink-muted:#8a847c;
+      --paper:#faf8f4; --paper-warm:#f3ede3; --paper-deep:#e8e0d0;
+      --rule:#d4cdc0; --accent:#c0392b;
+      --hynix:#2980b9; --samsung:#1a5276; --micron:#c0392b;
+      --nvda:#76b900; --soxx:#7d3c98; --amd:#ed1c24; --smh:#884ea0;
+      --up:#1e8449; --down:#922b21;
+      --ff-display:'Playfair Display',Georgia,serif;
+      --ff-body:'Source Serif 4',Georgia,serif;
+      --ff-mono:'JetBrains Mono',monospace;
+      --max:1300px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--paper);color:var(--ink);font-family:var(--ff-body);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;}
+    a{color:inherit;text-decoration:none;}
+
+    /* NAV */
+    .site-nav{background:var(--ink);border-bottom:3px solid var(--accent);position:sticky;top:0;z-index:200;}
+    .site-nav-inner{max-width:var(--max);margin:0 auto;padding:0 2rem;display:flex;align-items:center;gap:2rem;height:54px;}
+    .site-logo{font-family:var(--ff-display);font-size:1.3rem;font-weight:700;color:#faf8f4;white-space:nowrap;}
+    .site-logo span{color:var(--accent);}
+    .nav-links{display:flex;gap:0;}
+    .nlink{padding:0 1.1rem;height:54px;display:flex;align-items:center;font-size:0.88rem;font-family:var(--ff-body);color:rgba(250,248,244,0.6);border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;}
+    .nlink:hover{color:#faf8f4;}
+    .nlink.active{color:#faf8f4;border-bottom-color:var(--accent);}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:0.75rem;}
+    .ollama-dot{width:7px;height:7px;border-radius:50%;display:inline-block;}
+    .ollama-dot.on{background:#7ee0a0;}.ollama-dot.off{background:#f08080;}
+    .nav-time{font-family:var(--ff-mono);font-size:0.65rem;color:rgba(255,255,255,0.35);}
+
+    /* HEADER PAGE */
+    .page-header{background:var(--ink);padding:2rem 2rem 1.5rem;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .page-header-inner{max-width:var(--max);margin:0 auto;}
+    .page-kicker{font-family:var(--ff-mono);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:0.4rem;}
+    .page-title{font-family:var(--ff-display);font-size:clamp(1.6rem,3vw,2.2rem);font-weight:700;color:#faf8f4;margin-bottom:0.3rem;}
+    .page-sub{font-style:italic;color:var(--ink-muted);font-size:0.9rem;}
+
+    /* MARKET STRIP */
+    .market-strip{background:var(--paper-warm);border-bottom:1px solid var(--rule);overflow-x:auto;scrollbar-width:none;}
+    .market-strip::-webkit-scrollbar{display:none;}
+    .market-strip-inner{max-width:var(--max);margin:0 auto;padding:0 2rem;display:flex;gap:0;}
+    .mticker{display:flex;flex-direction:column;padding:0.9rem 1.4rem;border-right:1px solid var(--rule);min-width:130px;cursor:pointer;transition:background 0.15s;}
+    .mticker:hover{background:var(--paper-deep);}
+    .mticker.selected{background:var(--paper-deep);border-bottom:2px solid var(--accent);}
+    .mt-name{font-family:var(--ff-mono);font-size:0.65rem;letter-spacing:0.08em;color:var(--ink-muted);text-transform:uppercase;margin-bottom:0.2rem;}
+    .mt-price{font-family:var(--ff-mono);font-size:1rem;font-weight:500;color:var(--ink);}
+    .mt-change{font-family:var(--ff-mono);font-size:0.7rem;}
+    .mt-change.up{color:var(--up);}
+    .mt-change.down{color:var(--down);}
+
+    /* MAIN LAYOUT */
+    .page-body{max-width:var(--max);margin:0 auto;padding:2rem;}
+
+    /* SECTION TITLE */
+    .section-title{font-family:var(--ff-display);font-size:1.1rem;font-weight:600;padding-bottom:0.5rem;margin-bottom:1.25rem;border-bottom:2px solid var(--ink);display:flex;align-items:baseline;gap:0.75rem;}
+    .section-sub{font-family:var(--ff-mono);font-size:0.65rem;color:var(--ink-muted);font-weight:400;}
+    .section-icon{font-size:1.2rem;line-height:1;}
+
+    /* COMPANY GRID - 3 colonnes */
+    .company-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;margin-bottom:3rem;}
+    @media(max-width:900px){.company-grid{grid-template-columns:1fr;}}
+
+    /* CLIENT GRID - 2 colonnes */
+    .client-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2rem;margin-bottom:3rem;}
+    @media(max-width:900px){.client-grid{grid-template-columns:1fr;}}
+
+    /* CHART CARD (shared by companies & clients) */
+    .chart-card{background:#fff;border:1px solid var(--rule);border-radius:4px;overflow:hidden;}
+    .chart-card-head{padding:1rem 1.25rem 0.75rem;border-bottom:1px solid var(--rule);background:var(--paper-warm);}
+    .chart-company-name{font-family:var(--ff-display);font-size:1rem;font-weight:600;margin-bottom:0.15rem;}
+    .chart-ticker{font-family:var(--ff-mono);font-size:0.65rem;color:var(--ink-muted);letter-spacing:0.1em;}
+    .chart-desc{font-size:0.78rem;color:var(--ink-soft);margin-top:0.25rem;font-style:italic;}
+    .chart-price-row{display:flex;align-items:baseline;gap:0.75rem;margin-top:0.5rem;}
+    .chart-price{font-family:var(--ff-mono);font-size:1.3rem;font-weight:500;}
+    .chart-change{font-family:var(--ff-mono);font-size:0.75rem;}
+    .chart-change.up{color:var(--up);}
+    .chart-change.down{color:var(--down);}
+    .chart-ytd{font-family:var(--ff-mono);font-size:0.68rem;color:var(--ink-muted);}
+    .chart-wrap{padding:1rem;height:200px;position:relative;}
+    .chart-articles-list{padding:0.75rem 1.25rem;border-top:1px solid var(--rule);max-height:180px;overflow-y:auto;}
+    .chart-articles-title{font-family:var(--ff-mono);font-size:0.6rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--ink-muted);margin-bottom:0.5rem;}
+    .chart-article-item{padding:0.4rem 0;border-bottom:1px solid var(--rule);font-size:0.78rem;line-height:1.4;}
+    .chart-article-item:last-child{border-bottom:none;}
+    .chart-article-date{font-family:var(--ff-mono);font-size:0.6rem;color:var(--ink-muted);display:block;margin-bottom:0.1rem;}
+    .chart-article-title{color:var(--ink);transition:color 0.15s;}
+    .chart-article-title:hover{color:var(--accent);}
+
+    /* INDEX SECTION (ETFs) */
+    .index-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2rem;margin-bottom:3rem;}
+    @media(max-width:700px){.index-grid{grid-template-columns:1fr;}}
+
+    /* INDEX CHART CARD */
+    .index-card{background:#fff;border:1px solid var(--rule);border-radius:4px;overflow:hidden;}
+    .index-card-head{padding:0.85rem 1.1rem;background:var(--paper-warm);border-bottom:1px solid var(--rule);display:flex;justify-content:space-between;align-items:center;}
+    .index-name{font-family:var(--ff-mono);font-size:0.72rem;font-weight:500;letter-spacing:0.05em;text-transform:uppercase;}
+    .index-desc{font-size:0.75rem;color:var(--ink-muted);}
+    .index-price-wrap{text-align:right;}
+    .index-price{font-family:var(--ff-mono);font-size:1rem;font-weight:500;}
+    .index-change{font-family:var(--ff-mono);font-size:0.68rem;}
+    .index-change.up{color:var(--up);}
+    .index-change.down{color:var(--down);}
+    .index-chart-wrap{height:120px;padding:0.75rem;}
+
+    /* ARTICLE MARKERS legend */
+    .markers-legend{display:flex;align-items:center;gap:1.5rem;flex-wrap:wrap;margin-top:0.75rem;font-family:var(--ff-mono);font-size:0.65rem;color:var(--ink-muted);}
+    .ml-item{display:flex;align-items:center;gap:0.35rem;}
+    .ml-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+
+    /* ERROR */
+    .no-data{text-align:center;padding:2rem;color:var(--ink-muted);font-style:italic;font-size:0.88rem;}
+
+    /* FOOTER */
+    .footer{background:var(--ink);color:var(--ink-muted);padding:1.5rem 2rem;text-align:center;font-size:0.72rem;font-family:var(--ff-mono);letter-spacing:0.04em;margin-top:3rem;}
+    .footer strong{color:rgba(255,255,255,0.4);}
+
+    .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--rule);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+  </style>
+</head>
+<body>
+<div style="background:#1a1714;color:#8a847c;text-align:center;padding:0.4rem;font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;">SNAPSHOT STATIQUE &mdash; Export&eacute; le 01/03/2026 21:36</div>
+<script>
+/* MemoryWall Static Snapshot — fetch() override */
+const __SD__={"/api/status": {"status": "ok", "articles_count": 105, "analyzed_count": 48, "last_update": 1772397396.768144, "is_refreshing": false, "ollama_available": false, "ollama_model": "llama3.1:8b", "feeds_count": 15, "run_mode": "static"}, "/api/stocks/overview": {"stocks": {"MU": {"last_close": 412.37, "change_pct": -0.77, "ytd_change": 79.16, "currency": "USD"}, "000660.KS": {"last_close": 1061000.0, "change_pct": -3.46, "ytd_change": 104.96, "currency": "KRW"}, "005930.KS": {"last_close": 216500.0, "change_pct": -0.69, "ytd_change": 119.09, "currency": "KRW"}}, "indicators": {"SOXX": {"last_close": 352.29, "change_pct": -1.26, "ytd_change": 21.08, "currency": "USD"}, "SMH": {"last_close": 406.37, "change_pct": -1.37, "ytd_change": 17.23, "currency": "USD"}, "NVDA": {"last_close": 177.19, "change_pct": -4.16, "ytd_change": -1.7, "currency": "USD"}, "AMD": {"last_close": 200.21, "change_pct": -1.7, "ytd_change": -6.55, "currency": "USD"}}}, "/api/stocks/MU?days=63": {"ticker": "MU", "dates": ["2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [230.17, 236.38, 240.36, 239.39, 234.07, 226.56, 237.12, 246.82, 252.32, 263.6, 258.36, 241.04, 237.4, 232.42, 225.43, 248.45, 265.81, 276.48, 276.16, 286.56, 284.68, 294.37, 292.63, 285.41, 315.42, 312.15, 343.43, 339.55, 327.02, 345.09, 345.87, 338.13, 333.35, 336.63, 362.75, 365.0, 389.11, 397.58, 399.65, 389.09, 410.24, 435.28, 435.79, 414.88, 437.8, 419.44, 379.4, 382.89, 394.69, 383.5, 373.25, 410.34, 413.97, 411.66, 399.78, 420.95, 417.35, 428.17, 420.97, 418.01, 429.0, 415.56, 412.37], "last_close": 412.37, "change_pct": -0.77, "ytd_change": 79.16, "articles": [{"date": "2026-03-01T17:45:24+00:00", "title": "High Server DRAM Demand Drives Expansion by Major Suppliers", "url": "https://www.trendforce.com/research/download/RP251124ZT", "source": "TrendForce Semiconductor", "relevance": 6}, {"date": "2026-03-01T15:37:51+00:00", "title": "Micron's Strategic Expansion: New Indian Facility Ramps Up AI Chip Production", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.ad-hoc-news.de/boerse/news/ueberblick/micron-s-strategic-expansion-new-indian-facility-ramps-up-ai-chip/68623132&ct=ga&cd=CAIyG2MxMGQ5N2I1YTBjMDY5MTc6ZnI6ZW46RlI6TA&usg=AOvVaw1Co6Ng9vFQg36UX5XI4itm", "source": "Google Alert · HBM", "relevance": 4}, {"date": "2026-03-01T11:08:09+00:00", "title": "dataquest #hbm4#nvidia #samsung #trendforce - LinkedIn", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.linkedin.com/posts/dataquestindia_dataquest-hbm4-nvidia-activity-7433824615908487168-xy1B&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0AeqLgXLE8wJeLni2oeW2G", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-03-01T06:15:04+00:00", "title": "The battle for HBM market share has begun! Samsung takes the lead in revealing its ...", "url": "https://www.google.com/url?rct=j&sa=t&url=https://news.futunn.com/en/post/69410822/the-battle-for-hbm-market-share-has-begun-samsung-takes&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0tgCdLBEdNgypqAYogh2xV", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-03-01T00:41:45+00:00", "title": "In $mu's words, JEM ($6855) is a highly valued supplier of probe cards. Micron also had this ... - X", "url": "https://www.google.com/url?rct=j&sa=t&url=https://x.com/illyquid/status/2027906494721831119&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw3D49OaEVjdk_iekUNKkGj1", "source": "Google Alert · HBM4", "relevance": 6}, {"date": "2026-02-24T16:06:43+00:00", "title": "How much does distillation really matter for Chinese LLMs?", "url": "https://www.interconnects.ai/p/how-much-does-distillation-really", "source": "Interconnects · Nathan Lambert", "relevance": 4}, {"date": "2026-02-13T05:09:15+00:00", "title": "HBM4 Validation Expected in 2Q26; Three Major Suppliers Poised to Shape NVIDIA Supply Landscape, Says TrendForce", "url": "https://www.trendforce.com/presscenter/news/20260213-12929.html", "source": "TrendForce · Press Center", "relevance": 10}, {"date": "2026-01-19T09:13:37+00:00", "title": "Micron’s Acquisition of PSMC’s Tongluo Fab Could Lift Global DRAM Supply Outlook in 2027, Says TrendForce", "url": "https://www.trendforce.com/presscenter/news/20260119-12883.html", "source": "TrendForce · Press Center", "relevance": 4}, {"date": "2026-01-09T17:42:09+00:00", "title": "Claude Code Hits Different", "url": "https://www.interconnects.ai/p/claude-code-hits-different", "source": "Interconnects · Nathan Lambert", "relevance": 2}]}, "/api/stocks/000660.KS?days=63": {"ticker": "000660.KS", "dates": ["2025-11-25", "2025-11-26", "2025-11-27", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-19", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [517673.34, 522660.56, 542998.06, 529023.81, 537009.06, 556972.25, 550983.31, 541001.75, 542998.06, 575937.25, 564957.5, 585918.81, 563959.38, 569948.31, 552979.62, 529023.81, 549985.12, 550983.31, 545992.5, 578931.75, 582924.38, 586917.0, 597896.75, 638821.25, 649800.94, 675753.06, 694718.06, 724662.81, 740633.38, 754607.56, 742629.69, 747620.44, 736640.75, 740633.38, 747620.44, 754607.56, 762592.81, 741631.5, 738637.06, 753609.44, 765587.31, 734644.38, 798526.5, 839451.0, 859414.19, 907325.75, 828471.25, 905329.44, 898342.31, 840449.19, 837454.69, 885366.31, 874386.56, 858416.0, 886364.44, 878379.19, 892353.38, 947252.06, 949248.44, 1003148.94, 1016125.0, 1099000.0, 1061000.0], "last_close": 1061000.0, "change_pct": -3.46, "ytd_change": 104.96, "articles": [{"date": "2026-03-01T17:45:24+00:00", "title": "High Server DRAM Demand Drives Expansion by Major Suppliers", "url": "https://www.trendforce.com/research/download/RP251124ZT", "source": "TrendForce Semiconductor", "relevance": 6}, {"date": "2026-03-01T11:08:09+00:00", "title": "dataquest #hbm4#nvidia #samsung #trendforce - LinkedIn", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.linkedin.com/posts/dataquestindia_dataquest-hbm4-nvidia-activity-7433824615908487168-xy1B&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0AeqLgXLE8wJeLni2oeW2G", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-03-01T06:15:04+00:00", "title": "The battle for HBM market share has begun! Samsung takes the lead in revealing its ...", "url": "https://www.google.com/url?rct=j&sa=t&url=https://news.futunn.com/en/post/69410822/the-battle-for-hbm-market-share-has-begun-samsung-takes&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0tgCdLBEdNgypqAYogh2xV", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-02-26T05:00:00+00:00", "title": "SK hynix Honored for Superior Safety Measures for Biz Partners for 3rd Consecutive Year", "url": "https://news.skhynix.com/sk-hynix-honored-for-superior-safety-measures-for-biz-partners-for-3rd-consecutive-year/", "source": "SK Hynix Newsroom", "relevance": 2}, {"date": "2026-02-25T23:30:00+00:00", "title": "SK hynix and Sandisk Begin Global Standardization of Next-Generation Memory ‘HBF’", "url": "https://news.skhynix.com/sk-hynix-and-sandisk-begin-global-standardization-ofnext-generation-memory-hbf/", "source": "SK Hynix Newsroom", "relevance": 6}, {"date": "2026-02-25T09:14:39+00:00", "title": "New Facility Investment for Yongin Semiconductor Cluster", "url": "https://news.skhynix.com/new-facility-investment-for-yongin-semiconductor-cluster/", "source": "SK Hynix Newsroom", "relevance": 4}, {"date": "2026-02-19T00:00:00+00:00", "title": "SK hynix and Gauss Labs Present AI-Based Semiconductor Virtual Metrology Research at SPIE AL 2026", "url": "https://news.skhynix.com/sk-hynix-and-gauss-labs-present-ai-based-semiconductor-virtual-metrology-research-at-spie-al-2026/", "source": "SK Hynix Newsroom", "relevance": 4}, {"date": "2026-02-13T08:10:00+00:00", "title": "Chairman Chey Tae-won Joins Hands with Zuckerberg — From AI Chips to AI Glasses, Connected by Memory", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-meta/", "source": "SK Hynix Newsroom", "relevance": 10}, {"date": "2026-02-13T08:04:00+00:00", "title": "“From Chips to Cloud, SK and MS Connect the Dots”… Chairman Chey Tae-won Expands AI Partnership in Seattle", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-ms/", "source": "SK Hynix Newsroom", "relevance": 4}, {"date": "2026-02-13T08:02:00+00:00", "title": "“Designing the Future of AI Chips — Together”… Chairman Chey Tae-won and CEO Hock Tan Declare ‘One Team’", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-broadcom/", "source": "SK Hynix Newsroom", "relevance": 4}, {"date": "2026-02-13T08:00:00+00:00", "title": "SK Group Chairman Chey Tae-won and NVIDIA CEO Jensen Huang Meet To Discuss ‘AI One-Team Meeting’", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-nvidia/", "source": "SK Hynix Newsroom", "relevance": 6}, {"date": "2026-02-13T07:00:00+00:00", "title": "SK hynix Unveils ‘Talent hy-way,’ an Innovation in the Recruitment Paradigm: ‘Paving the Way to the Future, Beyond Borders and Regions’", "url": "https://news.skhynix.com/sk-hynix-unveils-talent-hy-way-recruitment-strategy/", "source": "SK Hynix Newsroom", "relevance": 2}, {"date": "2026-02-13T05:09:15+00:00", "title": "HBM4 Validation Expected in 2Q26; Three Major Suppliers Poised to Shape NVIDIA Supply Landscape, Says TrendForce", "url": "https://www.trendforce.com/presscenter/news/20260213-12929.html", "source": "TrendForce · Press Center", "relevance": 10}]}, "/api/stocks/005930.KS?days=63": {"ticker": "005930.KS", "dates": ["2025-11-25", "2025-11-26", "2025-11-27", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-19", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [98819.62, 102302.7, 102999.3, 100013.82, 100312.37, 102899.79, 103994.47, 104591.56, 107875.6, 108970.28, 107875.6, 107477.54, 106780.92, 108373.18, 104293.02, 102302.7, 107378.02, 107079.47, 105785.76, 109965.45, 110960.6, 110562.54, 116434.0, 119500.0, 119900.0, 128500.0, 138100.0, 138900.0, 141000.0, 138800.0, 139000.0, 138800.0, 137600.0, 140300.0, 143900.0, 148900.0, 149300.0, 145200.0, 149500.0, 152300.0, 152100.0, 152100.0, 159500.0, 162400.0, 160700.0, 160500.0, 150400.0, 167500.0, 169100.0, 159300.0, 158600.0, 166400.0, 165800.0, 167800.0, 178600.0, 181200.0, 190000.0, 190100.0, 193000.0, 200000.0, 203500.0, 218000.0, 216500.0], "last_close": 216500.0, "change_pct": -0.69, "ytd_change": 119.09, "articles": [{"date": "2026-03-01T13:00:46+00:00", "title": "Powered by semiconductors: South Korea's exports jump 29% in February - MK", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.mk.co.kr/en/business/11975877&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw1NrJlYFk4FHgq8xBrO6mff", "source": "Google Alert · HBM4", "relevance": 4}, {"date": "2026-03-01T11:08:09+00:00", "title": "dataquest #hbm4#nvidia #samsung #trendforce - LinkedIn", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.linkedin.com/posts/dataquestindia_dataquest-hbm4-nvidia-activity-7433824615908487168-xy1B&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0AeqLgXLE8wJeLni2oeW2G", "source": "Google Alert · HBM4", "relevance": 10}]}, "/api/stocks/SOXX?days=63": {"ticker": "SOXX", "dates": ["2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [290.96, 296.31, 296.49, 302.4, 308.91, 305.83, 308.95, 312.3, 311.72, 315.87, 314.06, 299.04, 297.57, 296.2, 285.23, 292.04, 299.81, 303.84, 304.96, 306.14, 306.04, 305.32, 304.92, 301.15, 313.69, 318.06, 328.35, 324.89, 319.58, 328.78, 330.35, 333.3, 331.9, 337.22, 342.47, 337.35, 348.14, 348.67, 344.71, 343.07, 351.08, 360.46, 361.13, 346.3, 352.69, 345.64, 330.38, 330.83, 348.51, 352.77, 351.43, 360.2, 351.5, 354.66, 354.1, 357.92, 355.84, 359.43, 356.82, 362.04, 368.0, 356.8, 352.29], "last_close": 352.29, "change_pct": -1.26, "ytd_change": 21.08, "articles": []}, "/api/stocks/SMH?days=63": {"ticker": "SMH", "dates": ["2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [346.63, 351.19, 351.87, 358.32, 363.24, 360.48, 363.29, 367.41, 367.86, 372.94, 369.74, 353.02, 351.81, 350.85, 338.19, 346.17, 355.12, 359.7, 363.16, 364.17, 365.86, 364.21, 363.31, 360.13, 373.3, 377.59, 387.62, 385.02, 378.98, 389.22, 390.66, 391.53, 388.35, 396.41, 400.39, 390.39, 401.93, 402.82, 400.09, 398.82, 407.25, 416.63, 417.52, 403.46, 407.97, 397.68, 382.02, 381.07, 401.65, 406.65, 404.76, 414.78, 406.11, 407.72, 407.51, 412.55, 410.2, 415.03, 412.88, 419.16, 426.16, 412.01, 406.37], "last_close": 406.37, "change_pct": -1.37, "ytd_change": 17.23, "articles": []}, "/api/stocks/NVDA?days=63": {"ticker": "NVDA", "dates": ["2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [180.25, 176.99, 179.91, 181.45, 179.58, 183.38, 182.41, 185.55, 184.97, 183.78, 180.93, 175.02, 176.29, 177.72, 170.94, 174.14, 180.99, 183.69, 189.21, 188.61, 190.53, 188.22, 187.54, 186.5, 188.85, 188.12, 187.24, 189.11, 185.04, 184.86, 184.94, 185.81, 183.14, 187.05, 186.23, 178.07, 183.32, 184.84, 187.67, 186.47, 188.52, 191.52, 192.51, 191.13, 185.61, 180.34, 174.19, 171.88, 185.41, 190.04, 188.54, 190.05, 186.94, 182.81, 184.97, 187.98, 187.9, 189.82, 191.55, 192.85, 195.56, 184.89, 177.19], "last_close": 177.19, "change_pct": -4.16, "ytd_change": -1.7, "articles": [{"date": "2026-03-01T17:45:24+00:00", "title": "2026 Outlook: NVIDIA H200 Strategy in China Market", "url": "https://www.trendforce.com/research/download/RP251209WB3", "source": "TrendForce Semiconductor", "relevance": 2}, {"date": "2026-03-01T11:08:09+00:00", "title": "dataquest #hbm4#nvidia #samsung #trendforce - LinkedIn", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.linkedin.com/posts/dataquestindia_dataquest-hbm4-nvidia-activity-7433824615908487168-xy1B&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0AeqLgXLE8wJeLni2oeW2G", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-03-01T09:07:01+00:00", "title": "NVIDIA Rubin R200 - Next-Gen AI Superchip", "url": "https://www.google.com/url?rct=j&sa=t&url=https://awesomeagents.ai/hardware/nvidia-rubin-r200/&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw10rv8qhD8BdSknVkGekxry", "source": "Google Alert · HBM4", "relevance": 6}, {"date": "2026-03-01T06:15:04+00:00", "title": "The battle for HBM market share has begun! Samsung takes the lead in revealing its ...", "url": "https://www.google.com/url?rct=j&sa=t&url=https://news.futunn.com/en/post/69410822/the-battle-for-hbm-market-share-has-begun-samsung-takes&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0tgCdLBEdNgypqAYogh2xV", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-02-26T00:00:00+00:00", "title": "Mixture of Experts (MoEs) in Transformers", "url": "https://huggingface.co/blog/moe-transformers", "source": "Hugging Face Blog", "relevance": 10}, {"date": "2026-02-25T13:10:00+00:00", "title": "The Download: introducing the Crime issue", "url": "https://www.technologyreview.com/2026/02/25/1133653/the-download-introducing-the-crime-issue/", "source": "MIT Technology Review · AI", "relevance": 2}, {"date": "2026-02-24T00:00:21+00:00", "title": "Deploying Open Source Vision Language Models (VLM) on Jetson", "url": "https://huggingface.co/blog/nvidia/cosmos-on-jetson", "source": "Hugging Face Blog", "relevance": 4}, {"date": "2026-02-13T08:10:00+00:00", "title": "Chairman Chey Tae-won Joins Hands with Zuckerberg — From AI Chips to AI Glasses, Connected by Memory", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-meta/", "source": "SK Hynix Newsroom", "relevance": 10}, {"date": "2026-02-13T08:00:00+00:00", "title": "SK Group Chairman Chey Tae-won and NVIDIA CEO Jensen Huang Meet To Discuss ‘AI One-Team Meeting’", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-nvidia/", "source": "SK Hynix Newsroom", "relevance": 6}, {"date": "2026-02-13T05:09:15+00:00", "title": "HBM4 Validation Expected in 2Q26; Three Major Suppliers Poised to Shape NVIDIA Supply Landscape, Says TrendForce", "url": "https://www.trendforce.com/presscenter/news/20260213-12929.html", "source": "TrendForce · Press Center", "relevance": 10}, {"date": "2026-02-13T00:00:00+00:00", "title": "Custom Kernels for All from Codex and Claude", "url": "https://huggingface.co/blog/custom-cuda-kernels-agent-skills", "source": "Hugging Face Blog", "relevance": 10}, {"date": "2026-02-04T18:00:28+00:00", "title": "Why Nvidia builds open models with Bryan Catanzaro", "url": "https://www.interconnects.ai/p/why-nvidia-builds-open-models-with", "source": "Interconnects · Nathan Lambert", "relevance": 10}, {"date": "2026-01-27T22:47:24+00:00", "title": "Arcee AI goes all-in on open models built in the U.S.", "url": "https://www.interconnects.ai/p/arcee-ai-goes-all-in-on-open-models", "source": "Interconnects · Nathan Lambert", "relevance": 10}]}, "/api/stocks/AMD?days=63": {"ticker": "AMD", "dates": ["2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27"], "prices": [214.24, 217.53, 219.76, 215.24, 217.6, 215.98, 217.97, 221.11, 221.62, 221.42, 221.43, 210.78, 207.58, 209.17, 198.11, 201.06, 213.43, 214.95, 214.9, 215.04, 214.99, 215.61, 215.34, 214.16, 223.47, 221.08, 214.35, 210.02, 204.68, 203.17, 207.69, 220.97, 223.6, 227.92, 231.83, 231.92, 249.8, 253.73, 259.68, 251.31, 252.03, 252.74, 252.18, 236.73, 246.27, 242.11, 200.19, 192.5, 208.44, 216.0, 213.57, 213.58, 205.94, 207.32, 203.08, 200.12, 203.37, 200.15, 196.6, 213.84, 210.86, 203.68, 200.21], "last_close": 200.21, "change_pct": -1.7, "ytd_change": -6.55, "articles": [{"date": "2026-03-01T11:08:09+00:00", "title": "dataquest #hbm4#nvidia #samsung #trendforce - LinkedIn", "url": "https://www.google.com/url?rct=j&sa=t&url=https://www.linkedin.com/posts/dataquestindia_dataquest-hbm4-nvidia-activity-7433824615908487168-xy1B&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0AeqLgXLE8wJeLni2oeW2G", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-03-01T09:07:04+00:00", "title": "AMD Instinct MI440X - CDNA 5 Enterprise GPU - Awesome Agents", "url": "https://www.google.com/url?rct=j&sa=t&url=https://awesomeagents.ai/hardware/amd-mi440x/&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw2owjkUVAv-2DEb4pka7OIq", "source": "Google Alert · HBM4", "relevance": 4}, {"date": "2026-03-01T06:15:04+00:00", "title": "The battle for HBM market share has begun! Samsung takes the lead in revealing its ...", "url": "https://www.google.com/url?rct=j&sa=t&url=https://news.futunn.com/en/post/69410822/the-battle-for-hbm-market-share-has-begun-samsung-takes&ct=ga&cd=CAIyGWYzNjYxYTQ3OWFhZjIwNTQ6ZnI6ZW46RlI&usg=AOvVaw0tgCdLBEdNgypqAYogh2xV", "source": "Google Alert · HBM4", "relevance": 10}, {"date": "2026-02-26T00:00:00+00:00", "title": "Mixture of Experts (MoEs) in Transformers", "url": "https://huggingface.co/blog/moe-transformers", "source": "Hugging Face Blog", "relevance": 10}, {"date": "2026-02-25T13:10:00+00:00", "title": "The Download: introducing the Crime issue", "url": "https://www.technologyreview.com/2026/02/25/1133653/the-download-introducing-the-crime-issue/", "source": "MIT Technology Review · AI", "relevance": 2}, {"date": "2026-02-13T08:10:00+00:00", "title": "Chairman Chey Tae-won Joins Hands with Zuckerberg — From AI Chips to AI Glasses, Connected by Memory", "url": "https://news.skhynix.com/global-big-tech-ai-partnership-meta/", "source": "SK Hynix Newsroom", "relevance": 10}, {"date": "2026-02-13T05:09:15+00:00", "title": "HBM4 Validation Expected in 2Q26; Three Major Suppliers Poised to Shape NVIDIA Supply Landscape, Says TrendForce", "url": "https://www.trendforce.com/presscenter/news/20260213-12929.html", "source": "TrendForce · Press Center", "relevance": 10}, {"date": "2026-02-13T00:00:00+00:00", "title": "Custom Kernels for All from Codex and Claude", "url": "https://huggingface.co/blog/custom-cuda-kernels-agent-skills", "source": "Hugging Face Blog", "relevance": 10}, {"date": "2026-02-04T18:00:28+00:00", "title": "Why Nvidia builds open models with Bryan Catanzaro", "url": "https://www.interconnects.ai/p/why-nvidia-builds-open-models-with", "source": "Interconnects · Nathan Lambert", "relevance": 10}, {"date": "2026-01-27T22:47:24+00:00", "title": "Arcee AI goes all-in on open models built in the U.S.", "url": "https://www.interconnects.ai/p/arcee-ai-goes-all-in-on-open-models", "source": "Interconnects · Nathan Lambert", "relevance": 10}]}};
+const __of__=window.fetch;
+window.fetch=function(u,o){
+  if(o&&o.method&&o.method!=='GET')return Promise.resolve(new Response(
+    JSON.stringify({status:"static",message:"Snapshot statique"}),
+    {status:200,headers:{'Content-Type':'application/json'}}));
+  try{
+    const p=new URL(u,location.origin);
+    const k=p.pathname+p.search;
+    if(__SD__[k]!==undefined)return Promise.resolve(new Response(
+      JSON.stringify(__SD__[k]),{status:200,headers:{'Content-Type':'application/json'}}));
+  }catch(e){}
+  return __of__.apply(this,arguments);
+};
+</script>
+
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a class="site-logo" href="index.html">Memory<span>Wall</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nlink">Veille</a>
+      <a href="dashboard.html" class="nlink active">Marchés</a>
+      <a href="analysis.html" class="nlink">Analyse</a>
+      <a href="settings.html" class="nlink">Paramètres</a>
+    </div>
+    <div class="nav-right">
+      <span class="ollama-dot" id="nav-dot"></span>
+      <span class="nav-time" id="nav-time"></span>
+    </div>
+  </div>
+</nav>
+
+<header class="page-header">
+  <div class="page-header-inner">
+    <div class="page-kicker">Tableau de bord · Marchés mémoire vive</div>
+    <h1 class="page-title">Fournisseurs, ETFs & Clients — DRAM & HBM</h1>
+    <p class="page-sub">Cotations boursières avec marqueurs des publications liées · Cours réels sur 3 mois</p>
+  </div>
+</header>
+
+<!-- MARKET STRIP -->
+<div class="market-strip">
+  <div class="market-strip-inner" id="market-strip">
+    <div style="padding:1rem 2rem;color:var(--ink-muted);font-size:0.85rem;font-style:italic;">Chargement des cotations…</div>
+  </div>
+</div>
+
+<div class="page-body">
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 1 : Fournisseurs DRAM & HBM                    -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-icon">&#9881;</span>
+    Fournisseurs DRAM & HBM
+    <span class="section-sub">SK Hynix · Samsung · Micron — Les trois grands producteurs de mémoire</span>
+  </div>
+  <div class="markers-legend">
+    <div class="ml-item"><span class="ml-dot" style="background:#e67e22"></span>Article pertinent (score ≥7)</div>
+    <div class="ml-item"><span class="ml-dot" style="background:var(--accent)"></span>Article très pertinent (score ≥9)</div>
+    <div class="ml-item"><span style="font-style:italic">Passez la souris sur les marqueurs pour voir l'article</span></div>
+  </div>
+  <br/>
+  <div class="company-grid" id="company-grid">
+    <div style="padding:2rem;color:var(--ink-muted);text-align:center;"><span class="spinner"></span></div>
+    <div></div><div></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 2 : ETFs Semi-conducteurs                       -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-icon">&#9733;</span>
+    ETFs Semi-conducteurs
+    <span class="section-sub">Indices de référence du secteur semi-conducteur</span>
+  </div>
+  <div class="index-grid" id="etf-grid">
+    <div style="padding:2rem;color:var(--ink-muted);text-align:center;"><span class="spinner"></span></div>
+    <div></div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 3 : Clients & Consommateurs HBM                -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <div class="section-title">
+    <span class="section-icon">&#9889;</span>
+    Clients & Consommateurs HBM
+    <span class="section-sub">NVIDIA · AMD — Principaux consommateurs de mémoire haute performance pour GPU AI</span>
+  </div>
+  <div class="markers-legend">
+    <div class="ml-item"><span class="ml-dot" style="background:#e67e22"></span>Article lié à la mémoire HBM/DRAM</div>
+    <div class="ml-item"><span style="font-style:italic">Inclut les articles mentionnant ces entreprises en lien avec la mémoire vive</span></div>
+  </div>
+  <br/>
+  <div class="client-grid" id="client-grid">
+    <div style="padding:2rem;color:var(--ink-muted);text-align:center;"><span class="spinner"></span></div>
+    <div></div>
+  </div>
+
+</div>
+
+<footer class="footer">
+  <strong>MemoryWall Monitor</strong> · Données Yahoo Finance via yfinance · Mis à jour quotidiennement · <span id="footer-date"></span>
+</footer>
+
+<script>
+// ══════════════════════════════════════════════════════════════════════
+// DONNÉES
+// ══════════════════════════════════════════════════════════════════════
+
+const COMPANIES = [
+  { ticker:'MU',         name:'Micron Technology',    short:'Micron',   color:'#c0392b', exchange:'NASDAQ' },
+  { ticker:'000660.KS',  name:'SK Hynix',             short:'SK Hynix', color:'#2980b9', exchange:'KRX'    },
+  { ticker:'005930.KS',  name:'Samsung Electronics',  short:'Samsung',  color:'#1a5276', exchange:'KRX'    },
+];
+
+const ETFS = [
+  { ticker:'SOXX', name:'iShares Semiconductor ETF', short:'SOXX', color:'#7d3c98', desc:'ETF semi-conducteurs — proxy marché mémoire' },
+  { ticker:'SMH',  name:'VanEck Semiconductor ETF',  short:'SMH',  color:'#884ea0', desc:'ETF semi-conducteurs — exposition large' },
+];
+
+const CLIENTS = [
+  { ticker:'NVDA', name:'NVIDIA Corporation',      short:'NVDA', color:'#76b900', exchange:'NASDAQ', desc:'Principal client HBM (GPU AI)' },
+  { ticker:'AMD',  name:'Advanced Micro Devices',  short:'AMD',  color:'#ed1c24', exchange:'NASDAQ', desc:'GPU concurrent — consommateur HBM' },
+];
+
+// ══════════════════════════════════════════════════════════════════════
+// HELPERS
+// ══════════════════════════════════════════════════════════════════════
+
+async function GET(url) {
+  const r = await fetch(url);
+  if (!r.ok) throw new Error(r.status);
+  return r.json();
+}
+
+function fmtChange(v) {
+  if (v == null) return '';
+  const sign = v >= 0 ? '+' : '';
+  return `${sign}${v.toFixed(2)}%`;
+}
+
+function changeClass(v) { return v >= 0 ? 'up' : 'down'; }
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// MARKET STRIP (bandeau cotations)
+// ══════════════════════════════════════════════════════════════════════
+
+async function loadMarketStrip() {
+  try {
+    const ov = await GET('/api/stocks/overview');
+    const strip = document.getElementById('market-strip');
+    strip.innerHTML = '';
+
+    const all = {...(ov.stocks||{}), ...(ov.indicators||{})};
+    Object.entries(all).forEach(([ticker, m]) => {
+      const div = document.createElement('div');
+      div.className = 'mticker';
+      div.innerHTML = `
+        <div class="mt-name">${ticker}</div>
+        <div class="mt-price">${m.last_close != null ? m.last_close.toLocaleString('fr-FR', {maximumFractionDigits:2}) : '—'} <span style="font-size:0.6rem;color:var(--ink-muted)">${m.currency||'USD'}</span></div>
+        <div class="mt-change ${changeClass(m.change_pct)}">${fmtChange(m.change_pct)} auj. ${m.ytd_change!=null ? '/ ' + fmtChange(m.ytd_change) + ' 3M' : ''}</div>`;
+      strip.appendChild(div);
+    });
+  } catch(e) {
+    document.getElementById('market-strip').innerHTML = `<div style="padding:1rem 2rem;color:var(--ink-muted);font-size:0.82rem;">Cotations non disponibles — vérifiez la connexion internet.</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// CHART CARDS (Fournisseurs + Clients) — graphiques complets + articles
+// ══════════════════════════════════════════════════════════════════════
+
+function createChartCard(co) {
+  const safeId = co.ticker.replace(/\./g, '_');
+  const card = document.createElement('div');
+  card.className = 'chart-card';
+  card.id = `card-${safeId}`;
+  card.innerHTML = `
+    <div class="chart-card-head">
+      <div class="chart-company-name">${co.name}</div>
+      <div class="chart-ticker">${co.ticker}${co.exchange ? ' · ' + co.exchange : ''}</div>
+      ${co.desc ? '<div class="chart-desc">' + esc(co.desc) + '</div>' : ''}
+      <div class="chart-price-row">
+        <span class="chart-price" id="price-${safeId}">—</span>
+        <span class="chart-change" id="chg-${safeId}"></span>
+        <span class="chart-ytd" id="ytd-${safeId}"></span>
+      </div>
+    </div>
+    <div class="chart-wrap"><canvas id="canvas-${safeId}"></canvas></div>
+    <div class="chart-articles-list" id="artlist-${safeId}">
+      <div class="chart-articles-title">Articles récents liés</div>
+      <div class="no-data">Chargement…</div>
+    </div>`;
+  return card;
+}
+
+function loadChartCards(gridId, items) {
+  const grid = document.getElementById(gridId);
+  grid.innerHTML = '';
+  for (const co of items) {
+    grid.appendChild(createChartCard(co));
+    loadChartData(co);
+  }
+}
+
+async function loadChartData(co) {
+  const safeId = co.ticker.replace(/\./g, '_');
+  try {
+    const data = await GET(`/api/stocks/${co.ticker}?days=63`);
+
+    // Update price info
+    const cur = co.exchange === 'KRX' ? 'KRW' : 'USD';
+    const lastFmt = data.last_close != null
+      ? data.last_close.toLocaleString('fr-FR', {maximumFractionDigits: co.exchange==='KRX'?0:2})
+      : '—';
+    const el = id => document.getElementById(id);
+    el(`price-${safeId}`).textContent = lastFmt + ' ' + cur;
+    const chgEl = el(`chg-${safeId}`);
+    chgEl.textContent = fmtChange(data.change_pct);
+    chgEl.className = 'chart-change ' + changeClass(data.change_pct);
+    el(`ytd-${safeId}`).textContent = data.ytd_change != null ? `3M ${fmtChange(data.ytd_change)}` : '';
+
+    // Build annotations from article markers
+    const annotations = {};
+    (data.articles || []).forEach((art, i) => {
+      const idx = data.dates.indexOf(art.date);
+      if (idx < 0) return;
+      const color = art.relevance >= 9 ? '#c0392b' : '#e67e22';
+      annotations[`art_${i}`] = {
+        type: 'line',
+        xMin: idx, xMax: idx,
+        borderColor: color,
+        borderWidth: 1.5,
+        borderDash: [3, 3],
+        label: {
+          display: false,
+          content: art.title.slice(0, 40),
+          color: '#fff',
+          backgroundColor: 'rgba(26,23,20,0.9)',
+          font: { family: 'JetBrains Mono', size: 10 },
+          padding: { x: 6, y: 4 },
+          position: 'start',
+        },
+        enter({ element }) { element.label.options.display = true; },
+        leave({ element }) { element.label.options.display = false; },
+      };
+    });
+
+    const ctx = document.getElementById(`canvas-${safeId}`).getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [{
+          data: data.prices,
+          borderColor: co.color,
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 4,
+          fill: {
+            target: 'origin',
+            above: co.color + '18',
+            below: co.color + '08',
+          },
+          tension: 0.3,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 600 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: ctx => ctx.parsed.y.toLocaleString('fr-FR', {maximumFractionDigits:2}),
+              title: ctx => ctx[0].label,
+            },
+            backgroundColor: 'rgba(26,23,20,0.92)',
+            titleColor: '#faf8f4',
+            bodyColor: 'rgba(250,248,244,0.75)',
+            titleFont: { family: 'JetBrains Mono', size: 10 },
+            bodyFont: { family: 'JetBrains Mono', size: 11 },
+            padding: 8,
+            displayColors: false,
+          },
+          annotation: { annotations },
+        },
+        scales: {
+          x: {
+            ticks: {
+              maxTicksLimit: 6,
+              font: { family: 'JetBrains Mono', size: 9 },
+              color: '#8a847c',
+              maxRotation: 0,
+            },
+            grid: { color: '#e8e0d0' },
+          },
+          y: {
+            ticks: {
+              font: { family: 'JetBrains Mono', size: 9 },
+              color: '#8a847c',
+              callback: v => v.toFixed(0),
+            },
+            grid: { color: '#e8e0d0' },
+          },
+        },
+      },
+    });
+
+    // Article list
+    const artListEl = document.getElementById(`artlist-${safeId}`);
+    const arts = (data.articles || []).slice(0, 8);
+    if (arts.length) {
+      artListEl.innerHTML = `<div class="chart-articles-title">Articles récents liés (${arts.length})</div>` +
+        arts.map(art => `
+          <div class="chart-article-item">
+            <span class="chart-article-date">${art.date} · ${art.source || ''}</span>
+            <a class="chart-article-title" href="${art.url || '#'}" target="_blank" rel="noopener">
+              ${esc(art.title)}
+            </a>
+          </div>`).join('');
+    } else {
+      artListEl.innerHTML = `<div class="chart-articles-title">Articles liés</div><div class="no-data">Aucun article lié pour cette période</div>`;
+    }
+
+  } catch(e) {
+    console.error(`[dashboard] Erreur chart ${co.ticker}:`, e);
+    const card = document.getElementById(`card-${safeId}`);
+    if (card) {
+      const wrap = card.querySelector('.chart-wrap');
+      if (wrap) wrap.innerHTML = `<div class="no-data">Données non disponibles.<br>Vérifiez la connexion ou attendez le prochain rafraîchissement.</div>`;
+    }
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// ETF CHARTS (compacts)
+// ══════════════════════════════════════════════════════════════════════
+
+async function loadETFCharts() {
+  const grid = document.getElementById('etf-grid');
+  grid.innerHTML = '';
+
+  for (const ind of ETFS) {
+    const card = document.createElement('div');
+    card.className = 'index-card';
+    card.innerHTML = `
+      <div class="index-card-head">
+        <div>
+          <div class="index-name">${ind.short}</div>
+          <div class="index-desc">${ind.desc}</div>
+        </div>
+        <div class="index-price-wrap">
+          <div class="index-price" id="ip-${ind.ticker}">—</div>
+          <div class="index-change" id="ic-${ind.ticker}"></div>
+        </div>
+      </div>
+      <div class="index-chart-wrap"><canvas id="ic-canvas-${ind.ticker}"></canvas></div>`;
+    grid.appendChild(card);
+
+    loadETFChart(ind);
+  }
+}
+
+async function loadETFChart(ind) {
+  try {
+    const data = await GET(`/api/stocks/${ind.ticker}?days=63`);
+
+    if (data.last_close != null) {
+      document.getElementById(`ip-${ind.ticker}`).textContent =
+        data.last_close.toLocaleString('fr-FR', {maximumFractionDigits:2});
+      const chgEl = document.getElementById(`ic-${ind.ticker}`);
+      chgEl.textContent = fmtChange(data.change_pct);
+      chgEl.className = 'index-change ' + changeClass(data.change_pct);
+    }
+
+    const ctx = document.getElementById(`ic-canvas-${ind.ticker}`).getContext('2d');
+    new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: data.dates,
+        datasets: [{
+          data: data.prices,
+          borderColor: ind.color,
+          borderWidth: 1.5,
+          pointRadius: 0,
+          fill: { target: 'origin', above: ind.color + '15' },
+          tension: 0.4,
+        }],
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 500 },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: { label: ctx => ctx.parsed.y.toLocaleString('fr-FR', {maximumFractionDigits:2}) },
+            backgroundColor: 'rgba(26,23,20,0.9)',
+            titleColor: '#faf8f4',
+            bodyColor: 'rgba(250,248,244,0.7)',
+            titleFont: { family: 'JetBrains Mono', size: 9 },
+            bodyFont: { family: 'JetBrains Mono', size: 10 },
+            displayColors: false, padding: 6,
+          },
+          annotation: { annotations: {} },
+        },
+        scales: {
+          x: { display: false },
+          y: {
+            ticks: { font: { family:'JetBrains Mono', size:8 }, color:'#8a847c', callback: v => v.toFixed(0) },
+            grid: { color: '#e8e0d0' },
+          },
+        },
+      },
+    });
+  } catch(e) {
+    console.error(`[dashboard] Erreur ETF ${ind.ticker}:`, e);
+    const wrap = document.getElementById(`ic-canvas-${ind.ticker}`)?.parentElement;
+    if (wrap) wrap.innerHTML = `<div class="no-data">Non disponible</div>`;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// NAV STATUS
+// ══════════════════════════════════════════════════════════════════════
+
+async function updateNav() {
+  try {
+    const s = await GET('/api/status');
+    const dot = document.getElementById('nav-dot');
+    dot.className = 'ollama-dot ' + (s.ollama_available ? 'on' : 'off');
+    if (s.last_update) {
+      document.getElementById('nav-time').textContent =
+        new Date(s.last_update * 1000).toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+    }
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════════════
+
+document.getElementById('footer-date').textContent = new Date().toLocaleDateString('fr-FR');
+updateNav();
+loadMarketStrip();
+loadChartCards('company-grid', COMPANIES);
+loadETFCharts();
+loadChartCards('client-grid', CLIENTS);
+</script>
+</body>
+</html>
