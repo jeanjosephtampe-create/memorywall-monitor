@@ -1,0 +1,821 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MemoryWall · État de l'art</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,600;1,8..60,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink:#1a1714; --ink-soft:#4a453f; --ink-muted:#8a847c;
+      --paper:#faf8f4; --paper-warm:#f3ede3; --paper-deep:#e8e0d0;
+      --rule:#d4cdc0; --accent:#c0392b;
+      --hynix:#2980b9; --samsung:#1a5276; --micron:#c0392b;
+      --up:#1e8449; --down:#922b21;
+      --ff-display:'Playfair Display',Georgia,serif;
+      --ff-body:'Source Serif 4',Georgia,serif;
+      --ff-mono:'JetBrains Mono',monospace;
+      --max:900px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--paper);color:var(--ink);font-family:var(--ff-body);font-size:17px;line-height:1.72;-webkit-font-smoothing:antialiased;}
+    a{color:var(--accent);text-decoration:none;border-bottom:1px solid transparent;transition:border-color .15s;}
+    a:hover{border-bottom-color:var(--accent);}
+    .site-nav{background:var(--ink);border-bottom:3px solid var(--accent);position:sticky;top:0;z-index:200;}
+    .site-nav-inner{max-width:1300px;margin:0 auto;padding:0 2rem;display:flex;align-items:center;gap:2rem;height:54px;}
+    .site-logo{font-family:var(--ff-display);font-size:1.3rem;font-weight:700;color:#faf8f4;white-space:nowrap;text-decoration:none;border:none;}
+    .site-logo span{color:var(--accent);}
+    .nav-links{display:flex;gap:0;}
+    .nlink{padding:0 1.1rem;height:54px;display:flex;align-items:center;font-size:0.88rem;font-family:var(--ff-body);color:rgba(250,248,244,0.6);border-bottom:2px solid transparent;transition:color 0.15s,border-color 0.15s;text-decoration:none;}
+    .nlink:hover{color:#faf8f4;}
+    .nlink.active{color:#faf8f4;border-bottom-color:var(--accent);}
+    .nav-right{margin-left:auto;display:flex;align-items:center;gap:0.75rem;}
+    .ollama-dot{width:7px;height:7px;border-radius:50%;display:inline-block;background:#7ee0a0;}
+    .nav-time{font-family:var(--ff-mono);font-size:0.65rem;color:rgba(255,255,255,0.35);}
+    .hero{background:var(--ink);padding:3.5rem 2rem 3rem;border-bottom:1px solid rgba(255,255,255,0.06);}
+    .hero-inner{max-width:var(--max);margin:0 auto;}
+    .hero-kicker{font-family:var(--ff-mono);font-size:0.62rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent);margin-bottom:0.6rem;}
+    .hero-title{font-family:var(--ff-display);font-size:clamp(1.8rem,4vw,2.6rem);font-weight:700;color:#faf8f4;line-height:1.2;margin-bottom:0.6rem;}
+    .hero-sub{font-style:italic;color:var(--ink-muted);font-size:0.95rem;line-height:1.55;max-width:680px;}
+    .hero-meta{margin-top:1.2rem;display:flex;gap:1.5rem;flex-wrap:wrap;font-family:var(--ff-mono);font-size:0.62rem;color:rgba(250,248,244,0.35);letter-spacing:0.04em;}
+    .article{max-width:var(--max);margin:0 auto;padding:2.5rem 2rem 4rem;}
+    .article p{margin-bottom:1.25rem;text-align:justify;hyphens:auto;}
+    .part-heading{font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.28em;text-transform:uppercase;color:var(--ink-muted);margin:3.5rem 0 0;padding:0;}
+    .article h2{font-family:var(--ff-display);font-size:1.42rem;font-weight:700;margin:0.35rem 0 0.4rem;padding-bottom:0.35rem;border-bottom:2px solid var(--ink);}
+    .article h3{font-family:var(--ff-display);font-size:1.08rem;font-weight:600;margin:1.8rem 0 0.25rem;color:var(--ink);}
+    .article h2 .h2-sub{font-family:var(--ff-mono);font-size:0.6rem;color:var(--ink-muted);font-weight:400;margin-left:0.7rem;letter-spacing:0.08em;text-transform:uppercase;}
+    /* SOMMAIRE */
+    .toc{background:var(--paper-warm);border:1px solid var(--rule);border-radius:4px;padding:1.5rem 1.75rem;margin:0 0 2.5rem;}
+    .toc-title{font-family:var(--ff-mono);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1.15rem;}
+    .toc-part{margin-bottom:1.1rem;}
+    .toc-part-label{font-family:var(--ff-mono);font-size:0.58rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--accent);font-weight:500;padding-bottom:0.3rem;border-bottom:1px solid var(--rule);margin-bottom:0.45rem;}
+    .toc-items{list-style:none;padding:0;}
+    .toc-items li{display:flex;align-items:baseline;gap:0.5rem;padding:0.18rem 0;}
+    .toc-items li a{font-family:var(--ff-body);font-size:0.86rem;color:var(--ink-soft);border:none;flex:1;transition:color .15s;}
+    .toc-items li a:hover{color:var(--accent);}
+    .toc-num{font-family:var(--ff-mono);font-size:0.62rem;color:var(--accent);min-width:2.1rem;flex-shrink:0;}
+    .toc-dots{flex:0 0 auto;width:clamp(20px,8%,80px);border-bottom:1px dotted var(--rule);margin-bottom:2px;}
+    /* GLOSSARY */
+    .glossary{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin:1.5rem 0 2rem;}
+    @media(max-width:640px){.glossary{grid-template-columns:1fr;}}
+    .gl-item{padding:0.9rem 1.1rem;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);background:#fff;}
+    .gl-item:nth-child(2n){border-right:none;}
+    .gl-item:nth-last-child(-n+2){border-bottom:none;}
+    @media(max-width:640px){.gl-item{border-right:none;}.gl-item:last-child{border-bottom:none;}}
+    .gl-term{font-family:var(--ff-mono);font-size:0.7rem;font-weight:500;color:var(--accent);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:0.3rem;}
+    .gl-def{font-size:0.82rem;line-height:1.55;color:var(--ink-soft);}
+    /* FIGURES */
+    .article-figure{margin:2.5rem 0;text-align:center;}
+    .article-image{max-width:100%;height:auto;border:1px solid var(--rule);border-radius:6px;box-shadow:0 4px 15px rgba(0,0,0,0.04);display:block;margin:0 auto;}
+    .article-figure figcaption{font-family:var(--ff-mono);font-size:0.75rem;color:var(--ink-muted);margin-top:1rem;line-height:1.4;}
+    /* PULLQUOTE */
+    .pullquote{border-left:3px solid var(--accent);padding:1rem 1.5rem;margin:2rem 0;background:var(--paper-warm);font-style:italic;font-size:1.05rem;line-height:1.6;color:var(--ink-soft);}
+    .pullquote cite{display:block;margin-top:0.5rem;font-family:var(--ff-mono);font-size:0.68rem;font-style:normal;color:var(--ink-muted);letter-spacing:0.04em;}
+    /* KF GRID */
+    .kf-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.5rem;margin:2rem 0 2.5rem;}
+    @media(max-width:700px){.kf-grid{grid-template-columns:1fr;}}
+    .kf-card{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.2rem 1.25rem;text-align:center;}
+    .kf-value{font-family:var(--ff-mono);font-size:1.8rem;font-weight:500;color:var(--accent);line-height:1.1;}
+    .kf-label{font-family:var(--ff-mono);font-size:0.65rem;color:var(--ink-muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.35rem;}
+    .kf-detail{font-size:0.78rem;color:var(--ink-soft);margin-top:0.3rem;font-style:italic;}
+    /* HIERARCHY TABLE */
+    .mem-table-wrap{overflow-x:auto;margin:1.5rem 0 0.5rem;}
+    .mem-table{width:100%;border-collapse:collapse;font-size:0.84rem;}
+    .mem-table thead tr{background:var(--ink);color:#faf8f4;}
+    .mem-table thead th{font-family:var(--ff-mono);font-size:0.6rem;letter-spacing:0.1em;text-transform:uppercase;padding:0.65rem 0.85rem;text-align:left;font-weight:500;white-space:nowrap;}
+    .mem-table tbody tr:nth-child(even){background:var(--paper-warm);}
+    .mem-table tbody tr:nth-child(odd){background:#fff;}
+    .mem-table tbody tr.row-hbm{background:#edf7ed;}
+    .mem-table tbody td{padding:0.6rem 0.85rem;border-bottom:1px solid var(--rule);vertical-align:middle;line-height:1.4;}
+    .mem-table tbody td:first-child{font-family:var(--ff-mono);font-size:0.68rem;font-weight:500;}
+    .val-good{color:var(--up);font-weight:600;font-family:var(--ff-mono);font-size:0.8rem;}
+    .val-bad{color:var(--down);font-family:var(--ff-mono);font-size:0.8rem;}
+    .val-mid{color:var(--hynix);font-family:var(--ff-mono);font-size:0.8rem;}
+    .val-neu{color:var(--ink-soft);font-family:var(--ff-mono);font-size:0.8rem;}
+    .badge{display:inline-block;padding:0.1rem 0.4rem;border-radius:2px;font-family:var(--ff-mono);font-size:0.6rem;font-weight:500;}
+    .badge-hbm{background:#e8f5e9;color:var(--up);border:1px solid #a5d6a7;}
+    .badge-note{font-family:var(--ff-body);font-size:0.78rem;font-style:italic;color:var(--ink-muted);}
+    .table-caption{font-family:var(--ff-mono);font-size:0.67rem;color:var(--ink-muted);margin:0.4rem 0 2rem;line-height:1.5;}
+    /* PROXIMITY DIAGRAM */
+    .proximity-diagram{margin:2rem 0;border:1px solid var(--rule);border-radius:4px;overflow:hidden;background:#fff;}
+    .proximity-diagram svg{display:block;width:100%;height:auto;}
+    /* HBM ANATOMY */
+    .hbm-diagram{background:var(--paper-warm);border:1px solid var(--rule);border-radius:4px;padding:1.5rem;margin:2rem 0;overflow-x:auto;}
+    .hbm-diagram-title{font-family:var(--ff-mono);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1.25rem;text-align:center;}
+    .hbm-stack-wrap{display:flex;gap:2rem;justify-content:center;align-items:flex-end;flex-wrap:wrap;}
+    .hbm-stack-col{display:flex;flex-direction:column;align-items:center;gap:0;}
+    .hbm-stack-label{font-family:var(--ff-mono);font-size:0.6rem;color:var(--ink-muted);margin-bottom:0.5rem;text-align:center;letter-spacing:0.06em;text-transform:uppercase;}
+    .hbm-die{width:120px;height:22px;display:flex;align-items:center;justify-content:center;font-family:var(--ff-mono);font-size:0.6rem;font-weight:500;color:#fff;border-bottom:1px solid rgba(255,255,255,0.2);}
+    .hbm-die.dram{background:#2980b9;}
+    .hbm-die.logic{background:#1a3a52;height:28px;}
+    .hbm-tsv-note{font-family:var(--ff-mono);font-size:0.58rem;color:var(--accent);margin-top:0.4rem;text-align:center;}
+    .hbm-vs-ddr{display:flex;gap:2rem;justify-content:center;margin-top:1.5rem;flex-wrap:wrap;}
+    .hbm-vs-item{text-align:center;}
+    .hbm-vs-val{font-family:var(--ff-mono);font-size:1rem;font-weight:500;}
+    .hbm-vs-lbl{font-family:var(--ff-mono);font-size:0.58rem;color:var(--ink-muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.2rem;}
+    /* CAUSAL CHAIN */
+    .causal-chain{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.25rem 1.5rem;margin:2rem 0;}
+    .causal-chain-title{font-family:var(--ff-mono);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1.1rem;}
+    .cc-steps{display:flex;flex-direction:column;gap:0;}
+    .cc-step{display:flex;gap:1rem;align-items:flex-start;padding:0.75rem 0;border-bottom:1px solid var(--paper-deep);}
+    .cc-step:last-child{border-bottom:none;}
+    .cc-step-num{font-family:var(--ff-mono);font-size:0.65rem;font-weight:500;color:var(--accent);min-width:1.6rem;padding-top:0.12rem;}
+    .cc-step-text{font-size:0.86rem;line-height:1.55;color:var(--ink-soft);}
+    .cc-step-text strong{color:var(--ink);font-weight:600;}
+    .cc-arrow-down{color:var(--rule);font-size:1rem;padding:0 0 0 1.6rem;}
+    /* MODEL SIZES */
+    .model-sizes{background:#fff;border:1px solid var(--rule);border-radius:4px;padding:1.25rem 1.5rem;margin:1.5rem 0 2rem;}
+    .model-sizes-title{font-family:var(--ff-mono);font-size:0.62rem;letter-spacing:0.15em;text-transform:uppercase;color:var(--ink-muted);margin-bottom:1rem;}
+    .ms-row{display:flex;align-items:center;gap:0.75rem;margin-bottom:0.55rem;}
+    .ms-name{font-family:var(--ff-mono);font-size:0.65rem;min-width:130px;color:var(--ink-soft);}
+    .ms-bar-wrap{flex:1;background:var(--paper-deep);border-radius:2px;height:18px;}
+    .ms-bar{height:18px;border-radius:2px;display:flex;align-items:center;justify-content:flex-end;padding-right:6px;}
+    .ms-bar span{font-family:var(--ff-mono);font-size:0.58rem;color:#fff;font-weight:500;white-space:nowrap;}
+    /* COMPANY CARDS */
+    .company-card{background:#fff;border:1px solid var(--rule);border-radius:4px;overflow:hidden;margin-bottom:2.5rem;}
+    .cc-head{padding:1.25rem 1.5rem 1rem;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:1rem;}
+    .cc-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+    .cc-name{font-family:var(--ff-display);font-size:1.2rem;font-weight:700;}
+    .cc-ticker{font-family:var(--ff-mono);font-size:0.65rem;color:var(--ink-muted);letter-spacing:0.1em;margin-left:auto;}
+    .cc-body{padding:1.25rem 1.5rem;}
+    .cc-body p{margin-bottom:0.9rem;font-size:0.92rem;line-height:1.65;text-align:justify;}
+    .cc-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:1px solid var(--rule);}
+    .cc-stat{padding:0.85rem 1rem;text-align:center;border-right:1px solid var(--rule);}
+    .cc-stat:last-child{border-right:none;}
+    .cc-stat-val{font-family:var(--ff-mono);font-size:1rem;font-weight:500;color:var(--ink);}
+    .cc-stat-label{font-family:var(--ff-mono);font-size:0.58rem;color:var(--ink-muted);letter-spacing:0.08em;text-transform:uppercase;margin-top:0.15rem;}
+    @media(max-width:600px){.cc-stats{grid-template-columns:1fr;}.cc-stat{border-right:none;border-bottom:1px solid var(--rule);}.cc-stat:last-child{border-bottom:none;}}
+    /* VEILLE PLATFORM CARDS */
+    .veille-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1.25rem;margin:1.5rem 0 2rem;}
+    @media(max-width:700px){.veille-grid{grid-template-columns:1fr;}}
+    .veille-card{background:#fff;border:1px solid var(--rule);border-radius:4px;overflow:hidden;}
+    .veille-card-head{padding:0.85rem 1.1rem 0.7rem;border-bottom:1px solid var(--rule);display:flex;align-items:center;gap:0.55rem;}
+    .veille-card-icon{font-size:1rem;line-height:1;}
+    .veille-card-title{font-family:var(--ff-display);font-size:1rem;font-weight:700;}
+    .veille-card-link{font-family:var(--ff-mono);font-size:0.6rem;color:var(--accent);margin-left:auto;letter-spacing:0.06em;border:none;}
+    .veille-card-body{padding:0.85rem 1.1rem;}
+    .veille-card-body p{font-size:0.82rem;line-height:1.55;color:var(--ink-soft);margin-bottom:0.6rem;}
+    .veille-card-body p:last-child{margin-bottom:0;}
+    .veille-tag{display:inline-block;padding:0.1rem 0.38rem;border-radius:2px;font-family:var(--ff-mono);font-size:0.57rem;background:var(--paper-deep);color:var(--ink-muted);margin:0.12rem 0.08rem 0 0;}
+    /* TIMELINE */
+    .timeline{position:relative;padding-left:2rem;margin:2rem 0 2.5rem;border-left:2px solid var(--rule);}
+    .tl-item{position:relative;margin-bottom:1.5rem;}
+    .tl-item::before{content:'';position:absolute;left:-2rem;top:0.35rem;width:10px;height:10px;border-radius:50%;border:2px solid var(--accent);background:var(--paper);transform:translateX(-50%);}
+    .tl-date{font-family:var(--ff-mono);font-size:0.65rem;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.15rem;}
+    .tl-text{font-size:0.88rem;line-height:1.55;}
+    /* SOURCES */
+    .sources{margin-top:3rem;padding-top:1.5rem;border-top:2px solid var(--ink);}
+    .sources h2{border-bottom:none;margin-top:0;font-size:1rem;}
+    .source-list{list-style:none;counter-reset:src;}
+    .source-list li{counter-increment:src;padding:0.4rem 0;border-bottom:1px solid var(--rule);font-size:0.78rem;line-height:1.5;display:flex;gap:0.5rem;}
+    .source-list li::before{content:'[' counter(src) ']';font-family:var(--ff-mono);font-size:0.68rem;color:var(--ink-muted);flex-shrink:0;min-width:1.8rem;}
+    .source-list li a{color:var(--accent);}
+    .source-pub{font-family:var(--ff-mono);font-size:0.65rem;color:var(--ink-muted);}
+    .footer{background:var(--ink);color:var(--ink-muted);padding:1.5rem 2rem;text-align:center;font-size:0.72rem;font-family:var(--ff-mono);letter-spacing:0.04em;margin-top:3rem;}
+    .footer strong{color:rgba(255,255,255,0.4);}
+    .ref{font-family:var(--ff-mono);font-size:0.62rem;color:var(--accent);vertical-align:super;margin-left:1px;cursor:help;}
+    .note{background:var(--paper-deep);border-left:2px solid var(--ink-muted);padding:0.75rem 1.1rem;margin:1.5rem 0;font-size:0.84rem;line-height:1.55;color:var(--ink-soft);}
+    .note strong{color:var(--ink);}
+    .part-divider{margin:3rem 0 0;border:none;border-top:1px solid var(--rule);}
+  </style>
+</head>
+<body>
+<div style="background:#1a1714;color:#8a847c;text-align:center;padding:0.4rem;font-family:'JetBrains Mono',monospace;font-size:0.62rem;letter-spacing:0.08em;">SNAPSHOT STATIQUE &mdash; Export&eacute; le 31/03/2026 13:27</div>
+<script>
+/* MemoryWall Static Snapshot — fetch() override */
+const __SD__={"/api/status": {"status": "ok", "articles_count": 1431, "analyzed_count": 778, "last_update": 1774956477.20903, "is_refreshing": false, "ollama_available": false, "ollama_model": "llama3.1:8b", "feeds_count": 27, "run_mode": "static"}, "/api/memorywall": {"llms": [{"name": "GPT-2", "date": "2019-02", "params_b": 1.5, "org": "OpenAI", "size_gb": 3.0, "year_dec": 2019.0833333333333, "estimated": false, "discovered": false}, {"name": "GPT-3", "date": "2020-05", "params_b": 175.0, "org": "OpenAI", "size_gb": 350.0, "year_dec": 2020.3333333333333, "estimated": false, "discovered": false}, {"name": "PaLM", "date": "2022-04", "params_b": 540.0, "org": "Google", "size_gb": 1080.0, "year_dec": 2022.25, "estimated": false, "discovered": false}, {"name": "GPT-4", "date": "2023-03", "params_b": 1800.0, "org": "OpenAI", "estimated": true, "size_gb": 3600.0, "year_dec": 2023.1666666666667, "discovered": false}, {"name": "Claude 1", "date": "2023-03", "params_b": 52.0, "org": "Anthropic", "estimated": true, "size_gb": 104.0, "year_dec": 2023.1666666666667, "discovered": false}, {"name": "Claude 2", "date": "2023-07", "params_b": 70.0, "org": "Anthropic", "estimated": true, "size_gb": 140.0, "year_dec": 2023.5, "discovered": false}, {"name": "Gemini 1.0 Ultra", "date": "2023-12", "params_b": 1000.0, "org": "Google", "estimated": true, "size_gb": 2000.0, "year_dec": 2023.9166666666667, "discovered": false}, {"name": "Gemini 1.5 Pro", "date": "2024-02", "params_b": 1500.0, "org": "Google", "estimated": true, "size_gb": 3000.0, "year_dec": 2024.0833333333333, "discovered": false}, {"name": "Claude 3 Opus", "date": "2024-03", "params_b": 200.0, "org": "Anthropic", "estimated": true, "size_gb": 400.0, "year_dec": 2024.1666666666667, "discovered": false}, {"name": "Grok-1", "date": "2024-03", "params_b": 314.0, "org": "xAI", "size_gb": 628.0, "year_dec": 2024.1666666666667, "estimated": false, "discovered": false}, {"name": "GPT-4o", "date": "2024-05", "params_b": 200.0, "org": "OpenAI", "estimated": true, "size_gb": 400.0, "year_dec": 2024.3333333333333, "discovered": false}, {"name": "Claude 3.5 Sonnet", "date": "2024-06", "params_b": 175.0, "org": "Anthropic", "estimated": true, "size_gb": 350.0, "year_dec": 2024.4166666666667, "discovered": false}, {"name": "Llama 3.1 405B", "date": "2024-07", "params_b": 405.0, "org": "Meta", "size_gb": 810.0, "year_dec": 2024.5, "estimated": false, "discovered": false}, {"name": "Grok-2", "date": "2024-08", "params_b": 600.0, "org": "xAI", "estimated": true, "size_gb": 1200.0, "year_dec": 2024.5833333333333, "discovered": false}, {"name": "DeepSeek-V3", "date": "2024-12", "params_b": 671.0, "org": "DeepSeek", "size_gb": 1342.0, "year_dec": 2024.9166666666667, "estimated": false, "discovered": false}, {"name": "Gemini 2.0 Pro", "date": "2025-01", "params_b": 1000.0, "org": "Google", "estimated": true, "size_gb": 2000.0, "year_dec": 2025.0, "discovered": false}, {"name": "DeepSeek-R1", "date": "2025-01", "params_b": 671.0, "org": "DeepSeek", "size_gb": 1342.0, "year_dec": 2025.0, "estimated": false, "discovered": false}, {"name": "GPT-4.5", "date": "2025-02", "params_b": 600.0, "org": "OpenAI", "estimated": true, "size_gb": 1200.0, "year_dec": 2025.0833333333333, "discovered": false}, {"name": "Claude 3.7 Sonnet", "date": "2025-02", "params_b": 200.0, "org": "Anthropic", "estimated": true, "size_gb": 400.0, "year_dec": 2025.0833333333333, "discovered": false}, {"name": "Grok-3", "date": "2025-02", "params_b": 2000.0, "org": "xAI", "estimated": true, "size_gb": 4000.0, "year_dec": 2025.0833333333333, "discovered": false}, {"name": "Llama 4 Maverick", "date": "2025-04", "params_b": 400.0, "org": "Meta", "estimated": true, "size_gb": 800.0, "year_dec": 2025.25, "discovered": false}, {"name": "Gemini 2.5 Pro", "date": "2025-05", "params_b": 2000.0, "org": "Google", "estimated": true, "size_gb": 4000.0, "year_dec": 2025.3333333333333, "discovered": false}, {"name": "GPT-5", "date": "2025-06", "params_b": 2000.0, "org": "OpenAI", "estimated": true, "size_gb": 4000.0, "year_dec": 2025.4166666666667, "discovered": false}, {"name": "GPT-5.1", "date": "2025-10", "params_b": 2200.0, "org": "OpenAI", "estimated": true, "size_gb": 4400.0, "year_dec": 2025.75, "discovered": false}, {"name": "Claude 4 Opus", "date": "2026-01", "params_b": 500.0, "org": "Anthropic", "estimated": true, "size_gb": 1000.0, "year_dec": 2026.0, "discovered": false}, {"name": "GPT-5.2", "date": "2026-02", "params_b": 2500.0, "org": "OpenAI", "estimated": true, "size_gb": 5000.0, "year_dec": 2026.0833333333333, "discovered": false}], "gpus": [{"name": "P100", "date": "2016-04", "vram_gb": 16, "bandwidth_gbs": 732, "type": "HBM2", "vendor": "NVIDIA", "year_dec": 2016.25, "bandwidth_tbs": 0.73}, {"name": "V100 (32 Go)", "date": "2018-03", "vram_gb": 32, "bandwidth_gbs": 900, "type": "HBM2", "vendor": "NVIDIA", "year_dec": 2018.1666666666667, "bandwidth_tbs": 0.9}, {"name": "A100 (40 Go)", "date": "2020-05", "vram_gb": 40, "bandwidth_gbs": 1555, "type": "HBM2e", "vendor": "NVIDIA", "year_dec": 2020.3333333333333, "bandwidth_tbs": 1.55}, {"name": "A100 (80 Go)", "date": "2020-11", "vram_gb": 80, "bandwidth_gbs": 2000, "type": "HBM2e", "vendor": "NVIDIA", "year_dec": 2020.8333333333333, "bandwidth_tbs": 2.0}, {"name": "H100 SXM", "date": "2022-09", "vram_gb": 80, "bandwidth_gbs": 3350, "type": "HBM3", "vendor": "NVIDIA", "year_dec": 2022.6666666666667, "bandwidth_tbs": 3.35}, {"name": "MI300X", "date": "2023-12", "vram_gb": 192, "bandwidth_gbs": 5300, "type": "HBM3", "vendor": "AMD", "year_dec": 2023.9166666666667, "bandwidth_tbs": 5.3}, {"name": "H200", "date": "2024-02", "vram_gb": 141, "bandwidth_gbs": 4800, "type": "HBM3e", "vendor": "NVIDIA", "year_dec": 2024.0833333333333, "bandwidth_tbs": 4.8}, {"name": "MI325X", "date": "2024-10", "vram_gb": 256, "bandwidth_gbs": 6000, "type": "HBM3e", "vendor": "AMD", "year_dec": 2024.75, "bandwidth_tbs": 6.0}, {"name": "B200", "date": "2025-03", "vram_gb": 192, "bandwidth_gbs": 8000, "type": "HBM3e", "vendor": "NVIDIA", "year_dec": 2025.1666666666667, "bandwidth_tbs": 8.0}], "summary": {"llm_count": 26, "gpu_count": 9, "discovered_count": 0, "max_llm_params_b": 2500.0, "max_gpu_vram_gb": 256, "max_bandwidth_gbs": 8000, "ratio_params_to_vram": 20.0}, "last_updated": "2026-03-31T13:27"}};
+const __of__=window.fetch;
+window.fetch=function(u,o){
+  if(o&&o.method&&o.method!=='GET')return Promise.resolve(new Response(
+    JSON.stringify({status:"static",message:"Snapshot statique"}),
+    {status:200,headers:{'Content-Type':'application/json'}}));
+  try{
+    const p=new URL(u,location.origin);
+    const k=p.pathname+p.search;
+    if(__SD__[k]!==undefined)return Promise.resolve(new Response(
+      JSON.stringify(__SD__[k]),{status:200,headers:{'Content-Type':'application/json'}}));
+  }catch(e){}
+  return __of__.apply(this,arguments);
+};
+</script>
+
+<nav class="site-nav">
+  <div class="site-nav-inner">
+    <a class="site-logo" href="index.html">Memory<span>Wall</span></a>
+    <div class="nav-links">
+      <a href="index.html" class="nlink active">Accueil</a>
+      <a href="veille.html" class="nlink">Veille</a>
+      <a href="dashboard.html" class="nlink">Marchés</a>
+      <a href="analysis.html" class="nlink">Analyse</a>
+      <a href="recap.html" class="nlink">Recap</a>
+      <a href="settings.html" class="nlink">Paramètres</a>
+    </div>
+    <div class="nav-right">
+      <span class="ollama-dot"></span>
+      <span class="nav-time" id="nav-time"></span>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="hero-kicker">État de l'art · Veille technologique 2026</div>
+    <h1 class="hero-title">Le super-cycle de la mémoire vive&nbsp;: quand l'IA transforme un marché de commodités en oligopole stratégique</h1>
+    <p class="hero-sub">Comment la demande explosive des datacenters IA en mémoire haute bande passante a déclenché une pénurie mondiale de DRAM — et pourquoi Samsung, SK Hynix et Micron en tiennent les clés.</p>
+    <div class="hero-meta">
+      <span>Mars 2026</span><span>·</span><span>MemoryWall Monitor</span><span>·</span><span>Veille technologique · DRAM &amp; HBM</span>
+    </div>
+  </div>
+</header>
+
+<article class="article">
+
+  <!-- ══ SOMMAIRE ══ -->
+  <nav class="toc" aria-label="Sommaire">
+    <div class="toc-title">Sommaire</div>
+
+    <div class="toc-part">
+      <div class="toc-part-label">I. Fondements techniques</div>
+      <ul class="toc-items">
+        <li><span class="toc-num">1.1</span><a href="#s1">Glossaire des termes clés</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">1.2</span><a href="#s2">Pourquoi l'IA a besoin de mémoire</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">1.3</span><a href="#s3">Entraînement vs. inférence&nbsp;: deux régimes distincts</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">1.4</span><a href="#s4">La croissance des modèles&nbsp;: une fuite en avant</a><span class="toc-dots"></span></li>
+      </ul>
+    </div>
+
+    <div class="toc-part">
+      <div class="toc-part-label">II. La solution HBM et ses contraintes</div>
+      <ul class="toc-items">
+        <li><span class="toc-num">2.1</span><a href="#s5">Hiérarchie mémoire&nbsp;: tableau comparatif</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">2.2</span><a href="#s6">Qu'est-ce que la HBM&nbsp;? Proximité, latence et bande passante</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">2.3</span><a href="#s7">Le lien direct&nbsp;: la HBM est faite de dies DRAM</a><span class="toc-dots"></span></li>
+      </ul>
+    </div>
+
+    <div class="toc-part">
+      <div class="toc-part-label">III. La crise de 2025-2026</div>
+      <ul class="toc-items">
+        <li><span class="toc-num">3.1</span><a href="#s8">Le «&nbsp;super-cycle&nbsp;»&nbsp;: choc d'offre et de demande simultané</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">3.2</span><a href="#s9">Impact sur les prix de la DRAM grand public</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">3.3</span><a href="#s10">Les trois acteurs de l'oligopole mondial</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">3.4</span><a href="#s11">Chronologie des événements clés</a><span class="toc-dots"></span></li>
+      </ul>
+    </div>
+
+    <div class="toc-part">
+      <div class="toc-part-label">IV. Le projet de veille MemoryWall</div>
+      <ul class="toc-items">
+        <li><span class="toc-num">4.1</span><a href="#s12-marches">Page Marchés&nbsp;: producteurs et clients IA</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">4.2</span><a href="#s12-veille">Page Veille&nbsp;: flux RSS et articles de référence</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">4.3</span><a href="#s12-recap">Page Récap&nbsp;: synthèse hebdomadaire</a><span class="toc-dots"></span></li>
+        <li><span class="toc-num">4.4</span><a href="#s12-llm">Traitement IA des articles&nbsp;: Llama 3.1 8B en local</a><span class="toc-dots"></span></li>
+      </ul>
+    </div>
+  </nav>
+
+
+  <!-- ══════════════════════════════
+       PARTIE I
+  ══════════════════════════════ -->
+  <div class="part-heading">Partie I</div>
+
+  <h2 id="s1">1.1 Glossaire des termes clés <span class="h2-sub">Définitions préalables</span></h2>
+  <p>Avant d'entrer dans l'analyse, il est utile de fixer le vocabulaire. Ce marché repose sur des termes techniques distincts dont la confusion fausse souvent la lecture des événements en cours.</p>
+
+  <div class="glossary">
+    <div class="gl-item">
+      <div class="gl-term">DRAM</div>
+      <div class="gl-def"><em>Dynamic Random-Access Memory.</em> Mémoire vive volatile à accès aléatoire. Elle perd son contenu à l'extinction. C'est le type de mémoire utilisé dans toute la chaîne, du PC familial au serveur de datacenter.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">DDR5 / LPDDR5</div>
+      <div class="gl-def">Cinquième génération de DRAM standard. DDR5 équipe PC et serveurs; LPDDR5 équipe smartphones et portables. Ce sont des <em>modules discrets</em> soudés ou installés à distance du processeur, connectés par des pistes PCB.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">HBM</div>
+      <div class="gl-def"><em>High Bandwidth Memory.</em> Mémoire spécialisée à très haute bande passante, intégrée directement à côté du GPU sur un interposeur en silicium. Construite à partir d'empilements de dies DRAM reliés par des TSV.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">Latence mémoire</div>
+      <div class="gl-def">Délai entre la demande d'une donnée et sa disponibilité pour le processeur, en nanosecondes (ns). Dépend directement de la <em>distance physique</em> parcourue par le signal électrique et du protocole de communication.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">Bande passante mémoire</div>
+      <div class="gl-def">Volume de données transférables par unité de temps (Go/s ou To/s). Dépend de la <em>largeur du bus</em> (bits en parallèle) et de la fréquence. C'est le principal facteur limitant les performances IA.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">TSV</div>
+      <div class="gl-def"><em>Through-Silicon Via.</em> Connexion verticale traversant un die de silicium de part en part. Permet d'empiler des puces et de les faire communiquer à très haute densité — technologie clé de la HBM.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">Wafer</div>
+      <div class="gl-def">Disque de silicium sur lequel sont gravées des centaines de puces (dies). Une usine se mesure en «&nbsp;wafers par mois&nbsp;» (wpm). C'est la ressource primaire et non-fongible de l'industrie — la réallouer vers la HBM la soustrait à la DDR5.</div>
+    </div>
+    <div class="gl-item">
+      <div class="gl-term">Paramètres (LLM)</div>
+      <div class="gl-def">Les «&nbsp;poids&nbsp;» d'un réseau de neurones. Un modèle avec 70&nbsp;Md de paramètres en FP16 occupe ~140&nbsp;Go en mémoire — avant même de charger les données à traiter. Tout doit être chargé en mémoire vive pour fonctionner.</div>
+    </div>
+  </div>
+
+
+  <h2 id="s2">1.2 Pourquoi l'IA a besoin de mémoire <span class="h2-sub">Le fondamental technique</span></h2>
+  <p>Un réseau de neurones artificiel n'est, dans sa forme la plus pure, qu'une suite de multiplications de matrices appliquées à des vecteurs de nombres. Pour produire une sortie, le processeur doit charger en mémoire les <em>paramètres</em> du modèle — les coefficients encodant sa «&nbsp;connaissance&nbsp;» — puis effectuer ces calculs à la volée sur les données d'entrée.</p>
+  <p>Cette exigence est non-négociable&nbsp;: un modèle ne peut pas travailler avec des paramètres laissés sur disque. Tout doit être <em>en mémoire accessible</em> au moment du calcul. La performance est donc directement conditionnée par la capacité du système à <em>déplacer des données</em> depuis la mémoire vers les unités de calcul. On parle d'<em>intensité arithmétique</em>&nbsp;: le ratio entre opérations effectuées et octets lus. Pour la grande majorité des opérations d'un réseau neuronal, ce ratio est faible — on lit énormément pour calculer relativement peu. La mémoire est le goulot d'étranglement structurel.</p>
+
+
+  <h2 id="s3">1.3 Entraînement vs. inférence <span class="h2-sub">Deux régimes, deux besoins mémoire distincts</span></h2>
+
+  <h3>L'entraînement (<em>training</em>)</h3>
+  <p>L'entraînement consiste à ajuster les paramètres d'un modèle en lui présentant des milliards d'exemples et en corrigeant ses erreurs par rétropropagation du gradient. C'est une opération <strong>unique, intensive et massivement parallèle</strong>. Il faut stocker simultanément les paramètres, les gradients (de même taille que les paramètres), les états de l'optimiseur (2-3× les paramètres) et les activations intermédiaires. Un modèle de 70&nbsp;Md de paramètres en FP32 requiert environ <strong>840&nbsp;Go de mémoire GPU</strong> pour un entraînement complet — soit dix GPU H100 en parallèle au minimum. L'entraînement maximise la <em>capacité mémoire</em> totale disponible.</p>
+
+  <h3>L'inférence (<em>inference</em>)</h3>
+  <p>L'inférence est la phase de <em>déploiement</em>&nbsp;: on utilise un modèle déjà entraîné pour produire des réponses en production. Les besoins mémoire sont moindres (pas de gradients), mais l'inférence a une contrainte supplémentaire critique&nbsp;: la <em>latence perçue</em>. Les applications conversationnelles doivent produire plusieurs dizaines de tokens par seconde pour paraître fluides. Générer un token revient à parcourir <em>intégralement</em> les paramètres du modèle. Avec 670&nbsp;Md de paramètres, chaque token «&nbsp;coûte&nbsp;» la lecture de plus d'un téraoctet de données. La <strong>bande passante mémoire est le facteur limitant direct de l'expérience utilisateur</strong>. L'inférence maximise la <em>vitesse de lecture</em> mémoire.</p>
+
+  <div class="note">
+    <strong>En résumé&nbsp;:</strong> entraînement = maximiser la <em>capacité</em> (tout stocker simultanément); inférence = maximiser la <em>bande passante</em> (tout lire le plus vite possible). La HBM répond aux deux contraintes, mais c'est la pression de l'inférence à grande échelle — des millions de requêtes simultanées — qui a déclenché la ruée sur les wafers DRAM.
+  </div>
+
+
+  <h2 id="s4">1.4 La croissance des modèles&nbsp;: une fuite en avant <span class="h2-sub">Des milliards aux billions de paramètres</span></h2>
+  <p>La demande en mémoire ne serait pas aussi aiguë si les modèles n'avaient pas grossi à une vitesse sans précédent. En six ans, la taille des grands modèles de langage a augmenté d'un facteur proche de <strong>1&nbsp;000</strong>, et rien n'indique de plateau à court terme.</p>
+
+  <div class="model-sizes">
+    <div class="model-sizes-title">Évolution de la taille des modèles LLM · Nombre de paramètres · Échelle logarithmique</div>
+    <div class="ms-row"><span class="ms-name">GPT-2 (2019)</span><div class="ms-bar-wrap"><div class="ms-bar" style="width:5%;background:#aaa;"><span>1,5 Md</span></div></div></div>
+    <div class="ms-row"><span class="ms-name">GPT-3 (2020)</span><div class="ms-bar-wrap"><div class="ms-bar" style="width:22%;background:#8a847c;"><span>175 Md</span></div></div></div>
+    <div class="ms-row"><span class="ms-name">PaLM (2022)</span><div class="ms-bar-wrap"><div class="ms-bar" style="width:38%;background:var(--hynix);"><span>540 Md</span></div></div></div>
+    <div class="ms-row"><span class="ms-name">Llama 3.1 (2024)</span><div class="ms-bar-wrap"><div class="ms-bar" style="width:55%;background:var(--hynix);"><span>405 Md</span></div></div></div>
+    <div class="ms-row"><span class="ms-name">DeepSeek R1 (2025)</span><div class="ms-bar-wrap"><div class="ms-bar" style="width:71%;background:var(--samsung);"><span>671 Md</span></div></div></div>
+    <div class="ms-row"><span class="ms-name">GPT-4 (estimé, MoE)</span><div class="ms-bar-wrap"><div class="ms-bar" style="width:100%;background:var(--accent);"><span>~1 800 Md</span></div></div></div>
+  </div>
+
+  <p>DeepSeek R1, avec ses 671&nbsp;Md de paramètres, nécessite en FP16 environ <strong>1&nbsp;340&nbsp;Go de mémoire GPU</strong>. Un serveur DGX H100 (8 GPU, 640&nbsp;Go de HBM total) ne suffit pas. Les projets Stargate et hyperscalers visent des clusters de plusieurs milliers de GPU — dont chacun intègre jusqu'à 188&nbsp;Go de HBM3E.</p>
+
+
+  <!-- ══════════════════════════════
+       PARTIE II
+  ══════════════════════════════ -->
+  <hr class="part-divider">
+  <div class="part-heading">Partie II</div>
+
+  <h2 id="s5">2.1 Hiérarchie mémoire <span class="h2-sub">Tableau comparatif des technologies</span></h2>
+  <p>Chaque niveau de la hiérarchie mémoire offre un compromis différent entre vitesse, latence et capacité. Ce tableau positionne la HBM par rapport aux technologies conventionnelles — la ligne HBM3E illustre le saut qualitatif que représente cette architecture.</p>
+
+  <div class="mem-table-wrap">
+    <table class="mem-table">
+      <thead>
+        <tr>
+          <th>Niveau</th>
+          <th>Technologie</th>
+          <th>Latence typique</th>
+          <th>Bande passante</th>
+          <th>Capacité typique</th>
+          <th>Usage principal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Cache L1/L2</td>
+          <td>SRAM on-die</td>
+          <td class="val-good">0,3–1 ns</td>
+          <td class="val-good">&gt; 1 To/s</td>
+          <td class="val-bad">256 Ko–8 Mo</td>
+          <td><span class="badge-note">Données immédiates CPU/GPU</span></td>
+        </tr>
+        <tr>
+          <td>Cache L3</td>
+          <td>SRAM on-die (large)</td>
+          <td class="val-good">3–5 ns</td>
+          <td class="val-mid">200–600 Go/s</td>
+          <td class="val-bad">4–64 Mo</td>
+          <td><span class="badge-note">Partage entre cœurs</span></td>
+        </tr>
+        <tr class="row-hbm">
+          <td><strong>HBM3E</strong> <span class="badge badge-hbm">IA</span></td>
+          <td>DRAM empilée (TSV)</td>
+          <td class="val-mid">~10 ns</td>
+          <td class="val-good"><strong>3 276 Go/s</strong></td>
+          <td class="val-mid">96–188 Go</td>
+          <td><span class="badge-note">GPU IA (H100, Blackwell…)</span></td>
+        </tr>
+        <tr>
+          <td>RAM DDR5</td>
+          <td>DRAM module distant</td>
+          <td class="val-bad">40–50 ns</td>
+          <td class="val-bad">51–90 Go/s</td>
+          <td class="val-good">8–256 Go</td>
+          <td><span class="badge-note">PC, serveurs grand public</span></td>
+        </tr>
+        <tr>
+          <td>LPDDR5X</td>
+          <td>DRAM mobile intégrée</td>
+          <td class="val-mid">20–30 ns</td>
+          <td class="val-bad">68 Go/s</td>
+          <td class="val-bad">4–32 Go</td>
+          <td><span class="badge-note">Smartphones, tablettes</span></td>
+        </tr>
+        <tr>
+          <td>SSD NVMe</td>
+          <td>NAND Flash</td>
+          <td class="val-bad">70–100 µs</td>
+          <td class="val-bad">~7 Go/s</td>
+          <td class="val-good">256 Go–8 To</td>
+          <td><span class="badge-note">Stockage persistant</span></td>
+        </tr>
+        <tr>
+          <td>HDD</td>
+          <td>Disque magnétique</td>
+          <td class="val-bad">5–10 ms</td>
+          <td class="val-bad">~0,2 Go/s</td>
+          <td class="val-good">1–20 To</td>
+          <td><span class="badge-note">Archivage, stockage froid</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="table-caption">La ligne HBM3E combine une latence 4× inférieure à la DDR5 et une bande passante 36× supérieure — deux gains rendus possibles par la même innovation&nbsp;: la <em>proximité physique</em> avec le GPU.</p>
+
+
+  <h2 id="s6">2.2 Qu'est-ce que la HBM&nbsp;? <span class="h2-sub">Proximité physique, latence et bande passante</span></h2>
+
+  <p>La <em>High Bandwidth Memory</em> n'est pas une chimie mémoire fondamentalement nouvelle — elle repose sur les mêmes cellules DRAM que la DDR5. L'innovation est <strong>architecturale et physique</strong>&nbsp;: empiler verticalement plusieurs dies DRAM via des TSV, puis placer cet empilement <em>directement à côté du GPU</em> sur un interposeur en silicium. Cette co-localisation résout simultanément deux problèmes jusqu'ici traités séparément&nbsp;: la latence et la bande passante.</p>
+
+  <h3>La proximité réduit la latence</h3>
+  <p>Dans un PC classique, les barrettes DDR5 sont à plusieurs centimètres du processeur. Chaque signal doit parcourir ces pistes de cuivre, traverser des connecteurs, et être re-synchronisé — induisant une latence incompressible de 40 à 50&nbsp;ns. La HBM, placée à quelques millimètres du die GPU sur le même interposeur silicium, ramène ce délai à environ <strong>10&nbsp;ns</strong>. C'est cette réduction du chemin physique — pas une technologie de cellule différente — qui explique le gain de latence.</p>
+
+  <h3>L'empilement multiplie la bande passante</h3>
+  <p>La bande passante dépend de la largeur du bus — le nombre de bits transférés en parallèle à chaque coup d'horloge. Une barrette DDR5 utilise un bus de <strong>64 bits</strong>. La courte distance permise par l'interposeur permet de router des milliers de connexions parallèles dans un espace minuscule&nbsp;: chaque stack HBM dispose d'un bus de <strong>1&nbsp;024 bits</strong>. Multiplié par quatre stacks sur un H100, le bus total atteint 4&nbsp;096 bits en simultané — soit 64 fois plus large qu'une DDR5. C'est ce facteur géométrique, plus que la fréquence, qui explique l'essentiel du gain de bande passante.</p>
+
+  <h3>Pourquoi on <em>empile</em> les dies DRAM</h3>
+  <p>L'empilement vertical par TSV permet de multiplier la capacité et le nombre d'entrées/sorties dans une empreinte au sol minuscule (quelques millimètres carrés par stack). Chaque die DRAM dans la pile contribue à la capacité totale et expose ses connexions via des TSV vers le logic die en base, qui agrège tout le trafic vers le GPU. La HBM3E empile jusqu'à 12 dies DRAM de 24&nbsp;Gb chacun, pour 288&nbsp;Gb (~36&nbsp;Go) par stack. Huit stacks donnent les 288&nbsp;Go que l'on voit sur les GPU Blackwell de NVIDIA.</p>
+
+  <!-- DIAGRAMME DE PROXIMITÉ -->
+  <div class="proximity-diagram">
+    <svg viewBox="0 0 820 340" xmlns="http://www.w3.org/2000/svg" font-family="'JetBrains Mono', monospace">
+      <rect width="820" height="340" fill="#faf8f4"/>
+      <text x="410" y="24" text-anchor="middle" font-size="9" fill="#8a847c" letter-spacing="2">DISTANCE PHYSIQUE ET SON IMPACT SUR LA LATENCE ET LA LARGEUR DE BUS</text>
+
+      <!-- PANNEAU GAUCHE — DDR5 classique -->
+      <rect x="18" y="34" width="378" height="292" rx="4" fill="#fff" stroke="#d4cdc0" stroke-width="1"/>
+      <rect x="18" y="34" width="378" height="26" rx="4" fill="#4a453f"/>
+      <rect x="18" y="48" width="378" height="12" fill="#4a453f"/>
+      <text x="207" y="50" text-anchor="middle" font-size="9" fill="#faf8f4" letter-spacing="1.5">DRAM CONVENTIONNELLE (DDR5)</text>
+      <rect x="32" y="72" width="350" height="238" rx="3" fill="#e8f0e0" stroke="#b5c9a0" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="207" y="90" text-anchor="middle" font-size="8" fill="#7a9a60" letter-spacing="1">CARTE MÈRE (PCB)</text>
+      <!-- CPU central -->
+      <rect x="152" y="148" width="110" height="82" rx="3" fill="#8e44ad"/>
+      <text x="207" y="184" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="500">CPU / GPU</text>
+      <text x="207" y="199" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.65)">die</text>
+      <text x="207" y="214" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.5)">Cache L1/L2/L3</text>
+      <!-- Modules DDR5 aux 4 coins -->
+      <rect x="46" y="96" width="70" height="36" rx="2" fill="#2980b9"/><text x="81" y="109" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="500">DDR5</text><text x="81" y="122" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.8)">module</text>
+      <rect x="298" y="96" width="70" height="36" rx="2" fill="#2980b9"/><text x="333" y="109" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="500">DDR5</text><text x="333" y="122" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.8)">module</text>
+      <rect x="46" y="252" width="70" height="36" rx="2" fill="#2980b9"/><text x="81" y="265" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="500">DDR5</text><text x="81" y="278" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.8)">module</text>
+      <rect x="298" y="252" width="70" height="36" rx="2" fill="#2980b9"/><text x="333" y="265" text-anchor="middle" font-size="8.5" fill="#fff" font-weight="500">DDR5</text><text x="333" y="278" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.8)">module</text>
+      <!-- Pistes PCB -->
+      <line x1="152" y1="168" x2="116" y2="132" stroke="#b5c9a0" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <line x1="262" y1="168" x2="298" y2="132" stroke="#b5c9a0" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <line x1="152" y1="210" x2="116" y2="252" stroke="#b5c9a0" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <line x1="262" y1="210" x2="298" y2="252" stroke="#b5c9a0" stroke-width="1.5" stroke-dasharray="3,2"/>
+      <!-- Distance marker -->
+      <line x1="116" y1="189" x2="152" y2="189" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arr-r)" marker-start="url(#arr-l)"/>
+      <text x="134" y="184" text-anchor="middle" font-size="7" fill="#c0392b">~6 cm</text>
+      <!-- Stats -->
+      <rect x="132" y="232" width="150" height="46" rx="3" fill="#fff3f3" stroke="#e8b4b4" stroke-width="1"/>
+      <text x="207" y="248" text-anchor="middle" font-size="8" fill="#922b21" letter-spacing="0.5">LATENCE : 40–50 ns</text>
+      <text x="207" y="261" text-anchor="middle" font-size="8" fill="#922b21" letter-spacing="0.5">BUS : 64 bits / module</text>
+      <text x="207" y="272" text-anchor="middle" font-size="7" fill="#c0392b">bande passante : ~90 Go/s total</text>
+
+      <!-- PANNEAU DROIT — HBM -->
+      <rect x="424" y="34" width="378" height="292" rx="4" fill="#fff" stroke="#d4cdc0" stroke-width="1"/>
+      <rect x="424" y="34" width="378" height="26" rx="4" fill="#1a1714"/>
+      <rect x="424" y="48" width="378" height="12" fill="#1a1714"/>
+      <text x="613" y="50" text-anchor="middle" font-size="9" fill="#faf8f4" letter-spacing="1.5">HBM (GPU IA — H100 / BLACKWELL)</text>
+      <!-- Interposeur silicium -->
+      <rect x="438" y="72" width="350" height="238" rx="3" fill="#e8e0d0" stroke="#c0a060" stroke-width="1.5"/>
+      <text x="613" y="92" text-anchor="middle" font-size="8" fill="#8a6a30" letter-spacing="1">INTERPOSEUR SILICIUM</text>
+      <!-- GPU die central -->
+      <rect x="523" y="112" width="180" height="132" rx="3" fill="#1a3a52"/>
+      <text x="613" y="155" text-anchor="middle" font-size="10.5" fill="#fff" font-weight="500">GPU Die</text>
+      <text x="613" y="171" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.65)">(H100 = 814 mm²)</text>
+      <text x="613" y="188" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.5)">Tensor Cores</text>
+      <text x="613" y="202" text-anchor="middle" font-size="7.5" fill="rgba(255,255,255,0.5)">Streaming Multiprocessors</text>
+      <text x="613" y="218" text-anchor="middle" font-size="7" fill="rgba(255,255,255,0.35)">SRAM Cache on-die</text>
+      <!-- HBM stack gauche -->
+      <rect x="451" y="118" width="58" height="100" rx="2" fill="#2980b9"/>
+      <rect x="451" y="118" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="131" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="144" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="157" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="170" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="183" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="196" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="451" y="209" width="58" height="9" rx="1" fill="#1a3a52"/>
+      <text x="480" y="111" text-anchor="middle" font-size="7.5" fill="#2980b9" font-weight="500">HBM3E</text>
+      <text x="480" y="105" text-anchor="middle" font-size="6.5" fill="#8a847c">stack #1</text>
+      <text x="480" y="223" text-anchor="middle" font-size="6" fill="#8a847c">logic die + ~50K TSV</text>
+      <!-- HBM stack droit -->
+      <rect x="717" y="118" width="58" height="100" rx="2" fill="#2980b9"/>
+      <rect x="717" y="118" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="131" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="144" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="157" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="170" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="183" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="196" width="58" height="10" rx="1" fill="#3d9fdd"/>
+      <rect x="717" y="209" width="58" height="9" rx="1" fill="#1a3a52"/>
+      <text x="746" y="111" text-anchor="middle" font-size="7.5" fill="#2980b9" font-weight="500">HBM3E</text>
+      <text x="746" y="105" text-anchor="middle" font-size="6.5" fill="#8a847c">stack #4</text>
+      <text x="746" y="223" text-anchor="middle" font-size="6" fill="#8a847c">logic die + ~50K TSV</text>
+      <!-- Bus larges (interposeur) -->
+      <rect x="509" y="153" width="14" height="52" rx="1" fill="#f39c12" opacity="0.75"/>
+      <rect x="703" y="153" width="14" height="52" rx="1" fill="#f39c12" opacity="0.75"/>
+      <text x="516" y="248" text-anchor="middle" font-size="6.5" fill="#c0392b" font-weight="500">1 024 bits</text>
+      <text x="710" y="248" text-anchor="middle" font-size="6.5" fill="#c0392b" font-weight="500">1 024 bits</text>
+      <!-- Distance HBM-GPU markers -->
+      <line x1="509" y1="175" x2="523" y2="175" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arr-r)" marker-start="url(#arr-l)"/>
+      <text x="516" y="170" text-anchor="middle" font-size="6.5" fill="#c0392b">~3mm</text>
+      <line x1="703" y1="175" x2="717" y2="175" stroke="#c0392b" stroke-width="1.5" marker-end="url(#arr-r)" marker-start="url(#arr-l)"/>
+      <text x="710" y="170" text-anchor="middle" font-size="6.5" fill="#c0392b">~3mm</text>
+      <!-- Stacks 2/3 label -->
+      <text x="613" y="105" text-anchor="middle" font-size="7" fill="#8a847c">stacks #2 et #3 (non représentés)</text>
+      <!-- Stats HBM -->
+      <rect x="494" y="256" width="238" height="38" rx="3" fill="#edf7ed" stroke="#a5d6a7" stroke-width="1"/>
+      <text x="613" y="272" text-anchor="middle" font-size="8" fill="#1e8449" letter-spacing="0.5" font-weight="500">LATENCE : ~10 ns   ·   BUS : 4 × 1 024 bits</text>
+      <text x="613" y="285" text-anchor="middle" font-size="7.5" fill="#1e8449">bande passante : 3 276 Go/s (×36 vs DDR5)</text>
+      <!-- DEFS flèches -->
+      <defs>
+        <marker id="arr-r" viewBox="0 0 6 6" refX="5" refY="3" markerWidth="4" markerHeight="4" orient="auto">
+          <path d="M0,0 L6,3 L0,6" fill="none" stroke="#c0392b" stroke-width="1.2"/>
+        </marker>
+        <marker id="arr-l" viewBox="0 0 6 6" refX="1" refY="3" markerWidth="4" markerHeight="4" orient="auto-start-reverse">
+          <path d="M0,0 L6,3 L0,6" fill="none" stroke="#c0392b" stroke-width="1.2"/>
+        </marker>
+      </defs>
+    </svg>
+  </div>
+  <p class="table-caption" style="text-align:center;">Gauche&nbsp;: DDR5 — modules distants sur PCB, bus étroit (64 bits), latence ~45&nbsp;ns. Droite&nbsp;: HBM — stacks co-localisés sur interposeur silicium, bus ×64 plus large (1&nbsp;024 bits/stack), latence ~10&nbsp;ns.</p>
+
+  <p>La HBM est donc une solution d'ingénierie systémique&nbsp;: elle ne rend pas chaque cellule mémoire plus rapide, elle rend le chemin de données <em>plus court, plus large et plus parallèle</em>. Les deux bénéfices — latence réduite et bande passante démultipliée — découlent du <em>même</em> choix architectural&nbsp;: la co-localisation sur interposeur silicium. Les générations se succèdent rapidement&nbsp;: HBM2E (A100), HBM3 (H100), HBM3E (H200, Blackwell), et HBM4 dont les premiers échantillons ont été distribués fin 2025.</p>
+
+
+  <h2 id="s7">2.3 Le lien direct&nbsp;: la HBM est faite de dies DRAM <span class="h2-sub">Pourquoi la HBM cannibale la production conventionnelle</span></h2>
+  <p>La HBM n'est pas une technologie mémoire concurrente de la DRAM&nbsp;: elle en est un <strong>dérivé direct</strong>. Chaque stack HBM est constitué de plusieurs <em>dies DRAM</em> empilés — les mêmes dies que ceux qui, autrement, seraient intégrés dans des barrettes DDR5 ou LPDDR5. Lorsqu'un fabricant réoriente ses lignes vers la HBM, il soustrait mécaniquement ces wafers du pool destiné à la DRAM conventionnelle.</p>
+
+  <div class="causal-chain">
+    <div class="causal-chain-title">Chaîne causale : de la demande HBM à la pénurie de DRAM conventionnelle</div>
+    <div class="cc-steps">
+      <div class="cc-step"><span class="cc-step-num">01</span><span class="cc-step-text">Les datacenters IA commandent massivement des GPU H100/H200/Blackwell, chacun nécessitant <strong>4 à 8 stacks HBM3E — soit 32 à 64 dies DRAM par GPU</strong>.</span></div>
+      <div class="cc-arrow-down">↓</div>
+      <div class="cc-step"><span class="cc-step-num">02</span><span class="cc-step-text">Les fabricants réallouent leurs <strong>lignes de production wafer</strong> vers la DRAM de spécification HBM. La HBM exige de surcroît un processus d'assemblage supplémentaire (empilage TSV, bonding interposeur) absorbant davantage de ressources industrielles.</span></div>
+      <div class="cc-arrow-down">↓</div>
+      <div class="cc-step"><span class="cc-step-num">03</span><span class="cc-step-text">L'offre de DRAM conventionnelle se contracte alors même que la demande des PC, smartphones et serveurs entreprise reste soutenue. <strong>Un déficit structurel d'approvisionnement se forme.</strong></span></div>
+      <div class="cc-arrow-down">↓</div>
+      <div class="cc-step"><span class="cc-step-num">04</span><span class="cc-step-text">Les fabricants, en position de force sur un marché vendeur, <strong>augmentent les prix</strong> de la DRAM conventionnelle. La réallocation est aussi rationnelle financièrement&nbsp;: un die valorisé en stack HBM rapporte nettement plus qu'en barrette DDR5. Le mouvement est auto-entretenu.</span></div>
+    </div>
+  </div>
+
+
+  <!-- ══════════════════════════════
+       PARTIE III
+  ══════════════════════════════ -->
+  <hr class="part-divider">
+  <div class="part-heading">Partie III</div>
+
+  <h2 id="s8">3.1 Le «&nbsp;super-cycle&nbsp;» <span class="h2-sub">Choc d'offre et de demande simultané</span></h2>
+  <p>Si la tension structurelle existait depuis 2023-2024, les prix n'ont explosé qu'à l'automne 2025. L'événement déclencheur est identifiable&nbsp;: en octobre 2025, OpenAI a signé des lettres d'intention avec Samsung et SK Hynix pour sécuriser jusqu'à <strong>900&nbsp;000 wafers DRAM par mois</strong> dans le cadre du projet Stargate.<a class="ref" href="#src3">[3]</a> Ce volume représente environ <strong>40&nbsp;% de la production mondiale de DRAM</strong> et plus du double de la capacité mondiale de production HBM à l'époque.<a class="ref" href="#src4">[4]</a></p>
+
+  <div class="pullquote">
+    «&nbsp;Le projet Stargate prévoit des commandes de mémoire qui dépassent à elles seules la capacité totale de production HBM mondiale. Ce n'est plus un contrat commercial, c'est un réalignement géopolitique de la chaîne d'approvisionnement.&nbsp;»
+    <cite>— Analyse TrendForce, octobre 2025 <a class="ref" href="#src4">[4]</a></cite>
+  </div>
+
+  <p>Parallèlement, les fabricants avaient déjà réduit leur production en 2024 pour éponger les surplus post-COVID.<a class="ref" href="#src5">[5]</a> La conjonction des deux — offre réduite, demande soudainement décuplée — a produit un choc de prix sans précédent récent. Samsung et SK Hynix refusent désormais les contrats long terme, préférant des négociations trimestrielles anticipant des hausses successives jusqu'en 2027.<a class="ref" href="#src6">[6]</a></p>
+
+  <div class="kf-grid">
+    <div class="kf-card"><div class="kf-value">900K</div><div class="kf-label">Wafers DRAM / mois</div><div class="kf-detail">Engagement OpenAI Stargate<a class="ref" href="#src3">[3]</a></div></div>
+    <div class="kf-card"><div class="kf-value">~40%</div><div class="kf-label">Production mondiale captée</div><div class="kf-detail">Par le seul projet Stargate<a class="ref" href="#src4">[4]</a></div></div>
+    <div class="kf-card"><div class="kf-value">+55–60%</div><div class="kf-label">Hausse DRAM Q1 2026</div><div class="kf-detail">Prévision TrendForce QoQ<a class="ref" href="#src6">[6]</a></div></div>
+  </div>
+
+
+  <h2 id="s9">3.2 Impact sur les prix de la DRAM grand public <span class="h2-sub">Du datacenter au smartphone</span></h2>
+  <p>La flambée se propage à l'ensemble de la chaîne par le mécanisme de réallocation décrit en section 2.3. Début 2026, Samsung aurait informé ses distributeurs taïwanais de hausses allant jusqu'à 80&nbsp;%.<a class="ref" href="#src1">[1]</a> Samsung a officiellement démenti une hausse uniforme, mais les prix DDR5 ont officiellement doublé au T1 2026 selon Digitimes,<a class="ref" href="#src7">[7]</a> et les plateformes de suivi confirment des hausses de 60 à 100&nbsp;% selon les segments.</p>
+
+  <figure class="article-figure">
+    <img src="static/img/DDR5_5200_2x16G_pcpartpicker.comtrendspricememory.png" alt="Graphique de l'évolution des prix DDR5-5200 (2x16GB) sur 18 mois" class="article-image">
+    <figcaption>Figure 1. Évolution du prix moyen de la DDR5-5200 (2×16&nbsp;Go) sur les 18 derniers mois. La rupture brutale de tendance de l'automne 2025 coïncide avec la signature de l'accord Stargate. (Source&nbsp;: PCPartPicker)</figcaption>
+  </figure>
+
+  <p>Les conséquences en aval sont concrètes. TrendForce prévoit que certains OEM smartphone pourraient revenir à des configurations à 4&nbsp;Go de RAM pour contenir les coûts.<a class="ref" href="#src2">[2]</a> Dell a annoncé des hausses de 10 à 30&nbsp;% sur ses PC professionnels dès décembre 2025. Apple, malgré son poids de négociation, n'a pas réussi à obtenir de contrat long terme à prix fixe avec Samsung pour sa LPDDR — une première en deux décennies.<a class="ref" href="#src14">[14]</a> Les délais de livraison s'étirent à 10 à 14 mois.</p>
+
+
+  <h2 id="s10">3.3 Les trois acteurs de l'oligopole mondial <span class="h2-sub">Samsung · SK Hynix · Micron</span></h2>
+  <p>Samsung Electronics, SK Hynix et Micron Technology contrôlent ensemble plus de <strong>95&nbsp;%</strong> de la production mondiale de DRAM et environ <strong>90&nbsp;%</strong> de la HBM.<a class="ref" href="#src9">[9]</a> Toute réorientation stratégique de l'un se répercute immédiatement sur l'ensemble de l'écosystème.</p>
+
+  <figure class="article-figure">
+    <img src="static/img/marketshare.png" alt="Parts de marché mondiales HBM par revenu" class="article-image">
+    <figcaption>Figure 2. Parts de marché mondiales de la HBM par revenus (Q3 2024 – Q3 2025). L'avance de SK Hynix reste nette, mais Samsung et Micron accélèrent. (Source&nbsp;: Counterpoint Research)</figcaption>
+  </figure>
+
+  <div class="company-card">
+    <div class="cc-head"><div class="cc-dot" style="background:var(--hynix);"></div><div class="cc-name">SK Hynix</div><div class="cc-ticker">000660.KS · KRX</div></div>
+    <div class="cc-body">
+      <p>SK Hynix est le leader incontesté de la HBM et, depuis le T1 2025, le premier producteur mondial de DRAM devant Samsung.<a class="ref" href="#src10">[10]</a> Avec 53&nbsp;% de part de marché HBM au T3 2025, l'entreprise fournit ~90&nbsp;% de la HBM des GPU NVIDIA H100, H200 et Blackwell.<a class="ref" href="#src11">[11]</a> Sa relation avec NVIDIA est quasi-exclusive&nbsp;: SK Hynix a été le premier à qualifier sa HBM3E chez le fondeur, lui conférant une avance difficile à combler. La totalité de sa production 2026 est déjà engagée — l'entreprise ne peut plus accepter de nouvelles commandes pour l'année en cours.<a class="ref" href="#src12">[12]</a> Elle investit 13 milliards de dollars dans son usine M15X (Cheongju) et prépare la production de masse de HBM4 dès 2026.<a class="ref" href="#src9">[9]</a></p>
+    </div>
+    <div class="cc-stats">
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--hynix);">53%</div><div class="cc-stat-label">Part HBM (T3 2025)</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">36%</div><div class="cc-stat-label">Part DRAM (T1 2025)</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">Sold out</div><div class="cc-stat-label">Capacité 2026</div></div>
+    </div>
+  </div>
+
+  <div class="company-card">
+    <div class="cc-head"><div class="cc-dot" style="background:var(--samsung);"></div><div class="cc-name">Samsung Electronics</div><div class="cc-ticker">005930.KS · KRX</div></div>
+    <div class="cc-body">
+      <p>Samsung, numéro un mondial de la DRAM pendant plus de trois décennies, a été détrôné en 2025 suite à des difficultés de qualification de ses puces HBM3E chez NVIDIA. Sa part de marché HBM est tombée à 17&nbsp;% au T2 2025, avant de remonter à 22&nbsp;% au T3.<a class="ref" href="#src13">[13]</a> Sa réponse est offensive&nbsp;: expansion de 50&nbsp;% de sa capacité HBM en 2026, reprise de la méga-usine P5 à Pyeongtaek (opérationnelle 2028), et course à la HBM4 via son procédé DRAM 10&nbsp;nm de sixième génération.<a class="ref" href="#src11">[11]</a> Côté tarification, les prix DDR5 ont officiellement doublé au T1 2026, et Apple a été informé de hausses pouvant atteindre 80&nbsp;% sur la LPDDR.<a class="ref" href="#src7">[7]</a><a class="ref" href="#src14">[14]</a></p>
+    </div>
+    <div class="cc-stats">
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--samsung);">35%</div><div class="cc-stat-label">Part HBM (T3 2025)</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">33%</div><div class="cc-stat-label">Part DRAM (T3 2025)</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">+50%</div><div class="cc-stat-label">Expansion HBM 2026</div></div>
+    </div>
+  </div>
+
+  <div class="company-card">
+    <div class="cc-head"><div class="cc-dot" style="background:var(--micron);"></div><div class="cc-name">Micron Technology</div><div class="cc-ticker">MU · NASDAQ</div></div>
+    <div class="cc-body">
+      <p>Micron, seul fabricant américain de DRAM, a opéré en décembre 2025 un pivot stratégique radical en quittant le marché grand public pour se concentrer sur les clients entreprise et IA.<a class="ref" href="#src8">[8]</a> Il en résulte un chiffre d'affaires record de 13,64 milliards de dollars au T1 fiscal 2026 (+57&nbsp;% sur un an), avec des marges brutes dépassant les 50&nbsp;%.<a class="ref" href="#src9">[9]</a> Micron a dépassé Samsung au T2 2025 pour devenir le deuxième fournisseur mondial de HBM (21&nbsp;% de part).<a class="ref" href="#src13">[13]</a> Son procédé DRAM 1-gamma — le plus avancé de l'industrie — a atteint des rendements matures deux fois plus vite que la génération précédente.<a class="ref" href="#src15">[15]</a> L'entreprise prévoit 200 milliards de dollars d'investissement sur 20 ans, dont 150 milliards aux États-Unis.</p>
+    </div>
+    <div class="cc-stats">
+      <div class="cc-stat"><div class="cc-stat-val" style="color:var(--micron);">21%</div><div class="cc-stat-label">Part HBM (T2 2025)</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">26%</div><div class="cc-stat-label">Part DRAM (T3 2025)</div></div>
+      <div class="cc-stat"><div class="cc-stat-val">$200 Md</div><div class="cc-stat-label">Investissement 20 ans</div></div>
+    </div>
+  </div>
+
+
+  <h2 id="s11">3.4 Chronologie des événements clés <span class="h2-sub">2024 → 2027</span></h2>
+  <div class="timeline">
+    <div class="tl-item"><div class="tl-date">2024</div><div class="tl-text">Les fabricants réduisent leurs capacités pour éponger les surplus post-COVID. Les prix DRAM touchent un plancher. La discipline de production resserre l'offre sans provoquer de choc immédiat.</div></div>
+    <div class="tl-item"><div class="tl-date">T1–T3 2025</div><div class="tl-text">SK Hynix dépasse Samsung comme n°1 mondial DRAM grâce à son avance HBM.<a class="ref" href="#src10">[10]</a> La HBM3E entre en production de masse. La totalité des capacités HBM 2026 est déjà réservée. Micron dépasse Samsung sur la HBM au T2.</div></div>
+    <div class="tl-item"><div class="tl-date">Octobre 2025</div><div class="tl-text">Signature de l'accord Stargate&nbsp;: 900&nbsp;000 wafers DRAM/mois captés par OpenAI, ~40&nbsp;% de la production mondiale.<a class="ref" href="#src3">[3]</a><a class="ref" href="#src4">[4]</a> Déclenchement du choc prix.</div></div>
+    <div class="tl-item"><div class="tl-date">Décembre 2025</div><div class="tl-text">Le prix de la DDR5 double à ~19,50&nbsp;$ l'unité (contre ~7&nbsp;$ début 2025).<a class="ref" href="#src2">[2]</a> Micron annonce son retrait du marché grand public.<a class="ref" href="#src8">[8]</a> Dell annonce des hausses PC de 10 à 30&nbsp;%.</div></div>
+    <div class="tl-item"><div class="tl-date">Janvier 2026</div><div class="tl-text">Fuite d'un mémo distributeur annonçant +80&nbsp;% chez Samsung.<a class="ref" href="#src1">[1]</a> Apple ne parvient pas à obtenir de LTA à prix fixe sur la LPDDR.<a class="ref" href="#src14">[14]</a> Prix de marché&nbsp;: hausse de 60 à 100&nbsp;% selon les segments.<a class="ref" href="#src7">[7]</a></div></div>
+    <div class="tl-item"><div class="tl-date">T1 2026</div><div class="tl-text">TrendForce confirme +55–60&nbsp;% QoQ sur la DRAM conventionnelle, +33–38&nbsp;% sur la NAND.<a class="ref" href="#src6">[6]</a> Samsung et SK Hynix refusent les contrats long terme. Délais de livraison&nbsp;: 10 à 14 mois.</div></div>
+    <div class="tl-item"><div class="tl-date">2026–2027</div><div class="tl-text">HBM4 entre en production de masse (SK Hynix en tête). Nouvelles fabs (Samsung P5 Pyeongtaek, SK Hynix M15X Cheongju) prévues pour 2027-2028. Aucun soulagement des prix DRAM conventionnelle attendu avant 2027 au plus tôt.</div></div>
+  </div>
+
+
+  <!-- ══════════════════════════════
+       PARTIE IV
+  ══════════════════════════════ -->
+  <hr class="part-divider">
+  <div class="part-heading">Partie IV</div>
+
+  <h2 id="s12">4. MemoryWall Monitor&nbsp;: architecture de la veille <span class="h2-sub">Ce que nous surveillons et où le trouver</span></h2>
+
+  <p>Face à la volatilité sans précédent du marché de la mémoire vive — prix changeant chaque trimestre, annonces de capacité hebdomadaires, qualifications GPU déterminantes — une veille opportuniste et dispersée ne suffit pas. MemoryWall Monitor est structuré en trois espaces complémentaires, couvrant chacun un horizon temporel et un type d'information distincts.</p>
+
+  <p>La veille porte sur <strong>cinq acteurs clés</strong>&nbsp;: les trois grands producteurs de mémoire (<strong>Samsung, SK Hynix, Micron</strong>) et les deux principaux clients IA du marché — <strong>NVIDIA</strong> et <strong>AMD</strong> — dont les annonces de GPU, qualifications HBM et volumes de commande conditionnent directement la demande en wafers.</p>
+
+  <div class="veille-grid">
+
+    <div class="veille-card" id="s12-marches">
+      <div class="veille-card-head">
+        <span class="veille-card-icon">📊</span>
+        <span class="veille-card-title">Marchés</span>
+        <a href="dashboard.html" class="veille-card-link">→ /dashboard</a>
+      </div>
+      <div class="veille-card-body">
+        <p>Tableau de bord financier et technologique en continu pour les cinq acteurs. Cours boursiers, résultats trimestriels, marges, parts de marché DRAM et HBM, prix spot.</p>
+        <p><strong>Producteurs&nbsp;:</strong> Samsung (005930.KS), SK Hynix (000660.KS), Micron (MU).<br>
+        <strong>Clients IA&nbsp;:</strong> NVIDIA (NVDA), AMD (AMD) — roadmap GPU, qualifications HBM, volumes Blackwell/CDNA.</p>
+        <div>
+          <span class="veille-tag">cours boursiers</span>
+          <span class="veille-tag">résultats trimestriels</span>
+          <span class="veille-tag">parts de marché</span>
+          <span class="veille-tag">prix DRAM spot</span>
+          <span class="veille-tag">qualifications HBM</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="veille-card" id="s12-veille">
+      <div class="veille-card-head">
+        <span class="veille-card-icon">📰</span>
+        <span class="veille-card-title">Veille</span>
+        <a href="veille.html" class="veille-card-link">→ /veille</a>
+      </div>
+      <div class="veille-card-body">
+        <p>Agrégateur de flux RSS couvrant les publications de référence du secteur semi-conducteur, mémoire et IA infrastructure. Articles classés par acteur et par type d'événement.</p>
+        <p>Sources&nbsp;: TrendForce, Digitimes, Tom's Hardware, Semiecosystem, Data Center Dynamics, IEEE Spectrum, et communications officielles des cinq entreprises.</p>
+        <div>
+          <span class="veille-tag">flux RSS</span>
+          <span class="veille-tag">communiqués officiels</span>
+          <span class="veille-tag">analyses sectorielles</span>
+          <span class="veille-tag">brevets &amp; roadmaps</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="veille-card" id="s12-recap">
+      <div class="veille-card-head">
+        <span class="veille-card-icon">📋</span>
+        <span class="veille-card-title">Récap</span>
+        <a href="recap.html" class="veille-card-link">→ /recap</a>
+      </div>
+      <div class="veille-card-body">
+        <p>Synthèse hebdomadaire structurée des faits marquants économiques et technologiques. Format constant&nbsp;: faits saillants, mouvements de prix, annonces produit, signaux avancés.</p>
+        <p>Couvre <strong>fournisseurs</strong> (Samsung, SK Hynix, Micron) et <strong>acheteurs</strong> (NVIDIA, AMD, hyperscalers), avec mise en perspective des tendances de fond.</p>
+        <div>
+          <span class="veille-tag">récap hebdo</span>
+          <span class="veille-tag">éco &amp; techno</span>
+          <span class="veille-tag">fournisseurs</span>
+          <span class="veille-tag">acheteurs IA</span>
+          <span class="veille-tag">signaux avancés</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <p>Ces trois espaces forment un continuum&nbsp;: la page <strong>Veille</strong> capte les signaux bruts dès leur publication; la page <strong>Marchés</strong> les traduit en indicateurs quantitatifs surveillés en continu; la page <strong>Récap</strong> les synthétise en une lecture hebdomadaire actionnelle. L'objectif est de maintenir une vision cohérente et actualisée de l'état du marché de la mémoire vive, depuis la salle des marchés jusqu'à la salle propre.</p>
+
+  <h3 id="s12-llm">4.4 Traitement IA des articles&nbsp;: Llama 3.1 8B en local</h3>
+
+  <p>Chaque article collecté via les flux RSS est soumis à une analyse automatique par un modèle de langage (LLM) tournant <strong>entièrement en local</strong>, sans cloud ni API externe. Le modèle utilisé est <strong>Llama 3.1 8B</strong>, servi par <a href="https://ollama.com" target="_blank" rel="noopener">Ollama</a> sur la machine hébergeant le serveur.</p>
+
+  <div class="causal-chain">
+    <div class="causal-chain-title">Pipeline de traitement d'un article</div>
+    <div class="cc-steps">
+      <div class="cc-step">
+        <div class="cc-step-num">01</div>
+        <div class="cc-step-text"><strong>Collecte RSS &amp; scraping.</strong> Le contenu brut est récupéré depuis le flux RSS. Si le résumé RSS est inférieur à 500 caractères, le texte complet de la page est scrapé puis nettoyé (suppression navigation, pub, cookies). Le contenu est tronqué à <strong>4 000 caractères</strong> avant envoi au modèle.</div>
+      </div>
+      <div class="cc-step">
+        <div class="cc-step-num">02</div>
+        <div class="cc-step-text"><strong>Score de pertinence préliminaire.</strong> Avant même de solliciter le LLM, un score 0–10 est calculé par comptage de mots-clés thématiques (HBM, DRAM, Memory Wall, inference…). Seuls les articles dépassant un seuil minimal sont prioritaires pour l'analyse IA.</div>
+      </div>
+      <div class="cc-step">
+        <div class="cc-step-num">03</div>
+        <div class="cc-step-text"><strong>Analyse par Llama 3.1 8B.</strong> Le modèle reçoit un prompt système définissant son rôle d'expert en Memory Wall et LLM inference, puis le titre et le contenu de l'article. Il génère une réponse JSON structurée avec&nbsp;: un titre court, un résumé en 2–3 phrases, des points clés, le lien avec le Memory Wall, des tags, un score de pertinence (0–10) et les entreprises mentionnées.</div>
+      </div>
+      <div class="cc-step">
+        <div class="cc-step-num">04</div>
+        <div class="cc-step-text"><strong>Réparation JSON robuste.</strong> Les LLM produisent parfois du JSON malformé (virgules traînantes, accolades non fermées, guillemets simples). Un mécanisme de réparation en 5 niveaux corrige automatiquement ces erreurs avant de sauvegarder le résultat en base.</div>
+      </div>
+      <div class="cc-step">
+        <div class="cc-step-num">05</div>
+        <div class="cc-step-text"><strong>Récap hebdomadaire.</strong> En fin de cycle, Llama 3.1 8B relit l'ensemble des articles de la semaine groupés par entreprise, et génère deux listes de bullets&nbsp;: <em>Tech</em> (faits techniques) et <em>Éco</em> (faits économiques), plus un score de sentiment −10/+10. Le contexte des deux semaines précédentes est injecté dans le prompt pour assurer la continuité.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    <strong>Pourquoi un modèle local&nbsp;?</strong> Llama 3.1 8B tourne sur le CPU ou GPU de la machine hôte via Ollama. Aucune donnée n'est envoyée à un tiers. Le modèle fonctionne à <code>temperature: 0.3</code> pour les analyses individuelles (réponses déterministes) et <code>0.15</code> pour les récaps (haute fidélité factuelle). La parallélisation est limitée à 2 articles simultanés pour ne pas saturer la mémoire.
+  </div>
+
+  <p>Le résultat de chaque analyse est affiché directement dans les cartes d'articles de la page Veille. La qualité de l'analyse dépend de la richesse du contenu disponible&nbsp;: un article scrapé dans son intégralité est analysé avec bien plus de précision qu'un simple titre RSS.</p>
+
+
+  <!-- SOURCES -->
+  <div class="sources">
+    <h2>Sources</h2>
+    <ol class="source-list">
+      <li id="src1"><span>Samsung refutes claims of 80% price hike across all memory products. <span class="source-pub">Tom's Hardware — 22 jan. 2026</span> · <a href="https://www.tomshardware.com/pc-components/ram/samsung-refutes-claims-of-80-percent-price-hike-across-all-memory-products-leaks-and-rumors-denied-by-samsung-pr-amidst-historic-ram-shortages" target="_blank" rel="noopener">tomshardware.com</a></span></li>
+      <li id="src2"><span>Samsung hikes DDR5 prices 100%, reshaping device pricing in 2026. <span class="source-pub">Interesting Engineering — 16 déc. 2025</span> · <a href="https://interestingengineering.com/culture/samsung-ddr5-memory-price-hike" target="_blank" rel="noopener">interestingengineering.com</a></span></li>
+      <li id="src3"><span>OpenAI's Stargate project to consume up to 40% of global DRAM output. <span class="source-pub">Tom's Hardware — 1 oct. 2025</span> · <a href="https://www.tomshardware.com/pc-components/dram/openais-stargate-project-to-consume-up-to-40-percent-of-global-dram-output-inks-deal-with-samsung-and-sk-hynix-to-the-tune-of-up-to-900-000-wafers-per-month" target="_blank" rel="noopener">tomshardware.com</a></span></li>
+      <li id="src4"><span>OpenAI's Stargate 900K DRAM wafers could hit 40% of global output. <span class="source-pub">TrendForce — 2 oct. 2025</span> · <a href="https://www.trendforce.com/news/2025/10/02/news-openais-stargate-900k-dram-wafers-could-hit-40-of-global-output-led-by-samsung-sk-hynix/" target="_blank" rel="noopener">trendforce.com</a></span></li>
+      <li id="src5"><span>DRAM and NAND prices jump as Samsung, SK Hynix and Micron tighten supply. <span class="source-pub">Astute Group — mars 2026</span> · <a href="https://www.astutegroup.com/news/memory-shortages/dram-and-nand-prices-jump-as-samsung-sk-hynix-and-micron-tighten-supply/" target="_blank" rel="noopener">astutegroup.com</a></span></li>
+      <li id="src6"><span>Samsung, SK reportedly hike server DRAM prices 60-70%. <span class="source-pub">TrendForce — 6 jan. 2026</span> · <a href="https://www.trendforce.com/news/2026/01/06/news-samsung-sk-reportedly-hike-server-dram-prices-60-70-google-microsoft-in-the-queue/" target="_blank" rel="noopener">trendforce.com</a></span></li>
+      <li id="src7"><span>Samsung DRAM prices reportedly double in Q1 2026. <span class="source-pub">Digitimes — mars 2026</span> · <a href="https://www.digitimes.com/news/a20260305PD213/samsung-dram-price-increase-demand-2026.html" target="_blank" rel="noopener">digitimes.com</a></span></li>
+      <li id="src8"><span>Samsung warns of memory shortages driving industry-wide price surge in 2026. <span class="source-pub">Network World — 14 jan. 2026</span> · <a href="https://www.networkworld.com/article/4113772/samsung-warns-of-memory-shortages-driving-industry-wide-price-surge-in-2026.html" target="_blank" rel="noopener">networkworld.com</a></span></li>
+      <li id="src9"><span>The AI Memory Supercycle. <span class="source-pub">Introl Blog — 3 jan. 2026</span> · <a href="https://introl.com/blog/ai-memory-supercycle-hbm-2026" target="_blank" rel="noopener">introl.com</a></span></li>
+      <li id="src10"><span>SK Hynix beats Samsung to become global No.1 DRAM maker. <span class="source-pub">KED Global — 9 avr. 2025</span> · <a href="https://www.kedglobal.com/korean-chipmakers/newsView/ked202504090006" target="_blank" rel="noopener">kedglobal.com</a></span></li>
+      <li id="src11"><span>Samsung and SK Hynix to scale up memory production capacity in 2026. <span class="source-pub">Data Center Dynamics — mars 2026</span> · <a href="https://www.datacenterdynamics.com/en/news/samsung-and-sk-hynix-to-scale-up-memory-production-capacity-in-2026-to-meet-ai-demand/" target="_blank" rel="noopener">datacenterdynamics.com</a></span></li>
+      <li id="src12"><span>SK Hynix sells out its DRAM, NAND, and HBM chip supply through 2026. <span class="source-pub">NotebookCheck — 31 oct. 2025</span> · <a href="https://www.notebookcheck.net/SK-hynix-sells-out-its-DRAM-NAND-and-HBM-chip-supply-to-Nvidia-through-2026-as-AI-demand-outpaces-Samsung-and-Micron-s-capacity.1151402.0.html" target="_blank" rel="noopener">notebookcheck.net</a></span></li>
+      <li id="src13"><span>SK Hynix' lead shrinks in DRAM, HBM. <span class="source-pub">Semiecosystem — 24 déc. 2025</span> · <a href="https://marklapedus.substack.com/p/sk-hynix-lead-shrinks-in-dram-hbm" target="_blank" rel="noopener">semiecosystem (Substack)</a></span></li>
+      <li id="src14"><span>Apple faces pressure as Samsung hikes up DRAM prices. <span class="source-pub">GSMArena — 28 jan. 2026</span> · <a href="https://www.gsmarena.com/apple_faces_pressure_as_samsung_hikes_up_dram_prices-news-71285.php" target="_blank" rel="noopener">gsmarena.com</a></span></li>
+      <li id="src15"><span>Why Micron and SK Hynix could quietly become the real AI winners. <span class="source-pub">The Motley Fool / Yahoo Finance — 24 nov. 2025</span> · <a href="https://finance.yahoo.com/news/why-micron-sk-hynix-could-130900749.html" target="_blank" rel="noopener">finance.yahoo.com</a></span></li>
+    </ol>
+  </div>
+
+</article>
+
+<footer class="footer">
+  <strong>MemoryWall Monitor</strong> · État de l'art · Veille technologique DRAM &amp; HBM · <span id="footer-date"></span>
+</footer>
+
+<script>
+  document.getElementById('footer-date').textContent = new Date().toLocaleDateString('fr-FR');
+  const t = document.getElementById('nav-time');
+  if (t) {
+    const update = () => { t.textContent = new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}); };
+    update(); setInterval(update, 60000);
+  }
+</script>
+</body>
+</html>
